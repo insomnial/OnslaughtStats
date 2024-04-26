@@ -22,6 +22,6 @@ class Director:
         return f"./data/{displayName}/pgcr.json"
     
     @staticmethod
-    def CreateDirectoriesForUser(displayName):
+    def CreateDirectoriesForClan(displayName):
         Path(Director.GetResultDirectory(displayName)).mkdir(parents=True, exist_ok=True)
         Path(Director.GetPGCRDirectory(displayName)).mkdir(parents=True, exist_ok=True)

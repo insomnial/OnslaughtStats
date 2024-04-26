@@ -15,6 +15,11 @@ class BungieApi:
     def getClanProfile(self, clanId):
         api_call = requests.get(f'{API_ROOT_PATH}/GroupV2/{clanId}/', headers=self.__HEADERS)
         return (api_call.json())['Response']
+    
+
+    def getClanMembers(self, clanId):
+        api_call = requests.get(f'{API_ROOT_PATH}/GroupV2/{clanId}/Members/', headers=self.__HEADERS)
+        return (api_call.json())['Response']
 
 
     def getProfile(self, membershipType, destinyMembershipId, components=[100]):

@@ -25,12 +25,6 @@ if __name__ == '__main__':
     else:
         # Manually set clan ID here
         CLAN_ID = 881267
-
-    from pathos.multiprocessing import ProcessPool, ThreadPool, ThreadingPool
-    pathos.helpers.freeze_support()  # required for windows
-    pool = ProcessPool()
-    # You could also specify the amount of threads. Note that this DRASTICALLY speeds up the process but takes serious computation power.
-    # pool = ProcessPool(40)
                                                                                                                                              
     # check manifest
     manifest = DestinyManifest().update()
@@ -41,18 +35,33 @@ if __name__ == '__main__':
     
     api = BungieApi(API_KEY)
 
+    # create clan holder
     cc = ClanCollector(CLAN_ID, api)
     cc.update()
     clanName = cc.getDisplayName()
 
-    #pc = PGCRCollector(systemPlatform, userId, api, pool)
-    #displayName = pc.getProfile().getDisplayName()
-
-    Director.CreateDirectoriesForUser(clanName)
+    # set up results directories
+    Director.CreateDirectoriesForClan(clanName)
     Director.ClearResultDirectory(clanName)
-    Director.CreateDirectoriesForUser(clanName)
-    
-    #pc.getCharacters().getActivities(limit=None).getPGCRs()  # .combineAllPgcrs()
-    #data = pc.getAllPgcrs()
+    Director.CreateDirectoriesForClan(clanName)
+
+    # populate clan members
+    cc.getClanMemberList()
+
+    # populate PGCRs from clan members
+    for member in cc.getClanMembers():
+        from pathos.multiprocessing import ProcessPool, ThreadPool, ThreadingPool
+        pathos.helpers.freeze_support()  # required for windows
+        pool = ProcessPool()
+        # You could also specify the amount of threads. Note that this DRASTICALLY speeds up the process but takes serious computation power.
+        # pool = ProcessPool(40)
+
+        member = member['destinyUserInfo']
+        memberPlatform = member['membershipType']
+        memberUserId = member['membershipId']
+        pc = PGCRCollector(memberPlatform, memberUserId, api, pool)
+        memberDisplayName = pc.getProfile().getDisplayName()
+        pc.getCharacters().getActivities(limit=None).getPGCRs()
+        #data = pc.getAllPgcrs()
 
     pool.close()

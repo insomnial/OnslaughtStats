@@ -16,6 +16,7 @@ class ClanCollector:
         self.members = None
         self.displayName = None
         self.clanMemberCount = None
+        self.clanMemberList = None
 
     
     def update(self):
@@ -25,12 +26,23 @@ class ClanCollector:
         # memberCount:86
         self.displayName = clanResults['detail']['name']
         self.clanMemberCount = clanResults['detail']['memberCount']
-        print(f"Found clan: {self.displayName}, {self.clanMemberCount} members")
+        print(f"Found clan: {self.displayName}")
         return self
 
 
     def getDisplayName(self):
         return self.displayName
+    
+
+    def getClanMemberList(self):
+        print(f"> Get clan members")
+        self.clanMemberList = (self.api.getClanMembers(self.clanId))['results']
+        print(f"Found {self.clanMemberCount} members")
+        return self
+    
+    
+    def getClanMembers(self):
+        return self.clanMemberList
 
 
     def getCharacters(self):

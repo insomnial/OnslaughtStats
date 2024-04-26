@@ -21,12 +21,12 @@ class PGCRCollector:
 
 
     def getProfile(self):
-        print("> Get profile")
+        #print("> Get profile")
         account_profile = self.api.getProfile(self.membershipType, self.membershipId)
         bungieGlobalDisplayName = account_profile['profile']['data']['userInfo']['bungieGlobalDisplayName']
         bungieGlobalDisplayNameCode = account_profile['profile']['data']['userInfo']['bungieGlobalDisplayNameCode']
         self.displayName = f'{bungieGlobalDisplayName}[{bungieGlobalDisplayNameCode}]'
-        print(f"> Found profile: {self.displayName}")
+        print(f"Found profile: {self.displayName}")
         return self
     
 
@@ -62,7 +62,7 @@ class PGCRCollector:
             page = 0
 
             def downloadActivityPage(page):
-                act = self.api.getActivities(self.membershipType, self.membershipId, char_id, page=page)
+                act = self.api.getActivities(self.membershipType, self.membershipId, char_id, page=page, mode=86)
                 if "activities" not in act:
                     return None
                 return [e["activityDetails"]["instanceId"] for e in act["activities"] if e["activityDetails"]["instanceId"] not in existingPgcrList]
