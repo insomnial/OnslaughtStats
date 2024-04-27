@@ -1,8 +1,9 @@
 from app.Director import Director
-from app.bungiemanifest import DestinyManifest
+from app.ManifestController import DestinyManifest
 from app.PgcrCollector import PGCRCollector
 from app.bungieapi import BungieApi
 from app.ClanCollector import ClanCollector
+from app.data.onslaughthash import ONSLAUGHT_ACTIVITIES
 
 ###############################################################################
 #
@@ -10,7 +11,8 @@ from app.ClanCollector import ClanCollector
 #
 ###############################################################################
 if __name__ == '__main__':
-    import pathos, argparse, os
+    import pathos, argparse, os, time
+    from tqdm import tqdm
 
     # build argument parsing
     descriptionString = """Get and compile Onslaught stats for a Destiny 2 clan.
@@ -48,20 +50,28 @@ if __name__ == '__main__':
     # populate clan members
     cc.getClanMemberList()
 
+    from pathos.multiprocessing import ProcessPool, ThreadPool, ThreadingPool
+    pathos.helpers.freeze_support()  # required for windows
+    pool = ProcessPool()
+    # You could also specify the amount of threads. Note that this DRASTICALLY speeds up the process but takes serious computation power.
+    # pool = ProcessPool(40)
+    
     # populate PGCRs from clan members
-    for member in cc.getClanMembers():
-        from pathos.multiprocessing import ProcessPool, ThreadPool, ThreadingPool
-        pathos.helpers.freeze_support()  # required for windows
-        pool = ProcessPool()
-        # You could also specify the amount of threads. Note that this DRASTICALLY speeds up the process but takes serious computation power.
-        # pool = ProcessPool(40)
-
+    for member in tqdm(cc.getClanMembers(), desc="> Fetching clan member PGCRs"):
         member = member['destinyUserInfo']
         memberPlatform = member['membershipType']
         memberUserId = member['membershipId']
-        pc = PGCRCollector(memberPlatform, memberUserId, api, pool)
+        pc = PGCRCollector(memberPlatform, memberUserId, clanName, api, pool)
         memberDisplayName = pc.getProfile().getDisplayName()
+        Director.CreateDirectoriesForMember(clanName, memberDisplayName)
         pc.getCharacters().getActivities(limit=None).getPGCRs()
         #data = pc.getAllPgcrs()
 
+        time.sleep(0.5) # I was getting weird 503 errors without this
+
+
     pool.close()
+
+    
+
+    a = True

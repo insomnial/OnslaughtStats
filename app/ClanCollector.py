@@ -66,7 +66,7 @@ class ClanCollector:
         assert self.characters is not None
         assert len(self.characters) > 0
 
-        existingPgcrList = [f[5:-5] for f in os.listdir(Director.GetPGCRDirectory(self.displayName))]
+        existingPgcrList = [f[5:-5] for f in os.listdir(Director.GetPGCRDirectoryRoot(self.displayName))]
 
         self.activities = []
         for k, char_id in enumerate(self.characters):
@@ -115,7 +115,7 @@ class ClanCollector:
                 tries += 1
                 pgcr = bungo.getPGCR(id)
 
-            with open("%s/pgcr_%s.json" % (Director.GetPGCRDirectory(self.displayName), pgcr["activityDetails"]["instanceId"]), "w", encoding='utf-8') as f:
+            with open("%s/pgcr_%s.json" % (Director.GetPGCRDirectoryRoot(self.displayName), pgcr["activityDetails"]["instanceId"]), "w", encoding='utf-8') as f:
                 f.write(json.dumps(pgcr))
 
         if len(self.activities) == 0:
@@ -150,7 +150,7 @@ class ClanCollector:
             return r
 
         with Timer("Get all PGCRs from individual files"):
-            root = Director.GetPGCRDirectory(self.displayName)
+            root = Director.GetPGCRDirectoryRoot(self.displayName)
             fileList = ["%s/%s" % (root, f) for f in os.listdir(root)]
             chunks = list(zip_longest(*[iter(fileList)] * 100, fillvalue=None))
             pgcrs = self.processPool.amap(loadJson, chunks).get()

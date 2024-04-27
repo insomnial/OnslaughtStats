@@ -25,6 +25,11 @@ class DestinyManifest():
 
         return self
     
+    def getOnslaughtActivityList(self):
+        data = GetActivityNames()
+        
+        return GetActivityNames()
+    
 
 def GetCacheFolder():
     # get current file path and go up two directories
