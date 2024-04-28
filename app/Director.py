@@ -5,23 +5,45 @@ from pathlib import Path
 class Director:
 
     @staticmethod
-    def ClearResultDirectory(displayName):
-        path = Director.GetResultDirectory(displayName)
+    def ClearResultDirectory(clanName):
+        path = Director.GetResultDirectory(clanName)
         shutil.rmtree(path)
 
     @staticmethod
-    def GetResultDirectory(displayName):
-        return f"./data/{displayName}/result/"
+    def GetResultDirectory(clanName):
+        return f"./data/{clanName}/result/"
 
     @staticmethod
-    def GetPGCRDirectory(displayName):
-        return f"./data/{displayName}/pgcr/"
-
-    @staticmethod
-    def GetAllPgcrFilename(displayName):
-        return f"./data/{displayName}/pgcr.json"
+    def GetPGCRDirectoryRoot(clanName):
+        return f"./data/{clanName}/pgcr/"
     
     @staticmethod
-    def CreateDirectoriesForUser(displayName):
-        Path(Director.GetResultDirectory(displayName)).mkdir(parents=True, exist_ok=True)
-        Path(Director.GetPGCRDirectory(displayName)).mkdir(parents=True, exist_ok=True)
+    def GetPGCRDirectoryMember(clanName, memberName):
+        return f"./data/{clanName}/pgcr/{memberName}/"
+
+    @staticmethod
+    def GetAllPgcrFilename(clanName):
+        return f"./data/{clanName}/pgcr.json"
+    
+    @staticmethod
+    def GetCacheRoot():
+        return f"./cache/"
+    
+    @staticmethod
+    def CreateDirectoriesForClan(clanName):
+        Path(Director.GetResultDirectory(clanName)).mkdir(parents=True, exist_ok=True)
+        Path(Director.GetPGCRDirectoryRoot(clanName)).mkdir(parents=True, exist_ok=True)
+    
+    @staticmethod
+    def CreateDirectoriesForMember(clanName, memberName):
+        Path(Director.GetPGCRDirectoryMember(clanName, memberName)).mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    def CreateCacheFolder():
+        Path(Director.GetCacheRoot()).mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    def DeleteCacheFolder():
+        shutil.rmtree(Director.GetCacheRoot(), ignore_errors=True)
+
+        

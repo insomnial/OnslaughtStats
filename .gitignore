@@ -157,3 +157,6 @@ cython_debug/
 
 # ignore VS code remnants
 /.vscode
+
+# ignore mac remnants
+.DS_Store

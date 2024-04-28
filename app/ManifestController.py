@@ -1,5 +1,6 @@
 import json, urllib.request, os, shutil
 
+from app.Director import Director
 from app.data.activities import ACTIVITY_NAMES
 from app.data.classhash import CLASS_HASH
 
@@ -16,29 +17,36 @@ class DestinyManifest():
         self.VersionNumber = None
 
 
-    def update(self):
-        self.CacheFolder = GetCacheFolder()
+    def update(self, freshPull):
+        self.CacheFolder = Director.GetCacheRoot()
         self.ActivityTypeNames = GetActivityTypeNames()
-        self.VersionNumber = GetVersionNumber()
-        self.ActivityNames = GetActivityNames()
+        self.VersionNumber = GetVersionNumber(freshPull)
+        self.ActivityNames = GetActivityNames(freshPull)
         self.ClassHash = GetClassDefinition()
 
         return self
     
+    def getOnslaughtActivityList(self):
+        data = GetActivityNames()
+        
+        return GetActivityNames()
+    
 
 def GetCacheFolder():
-    # get current file path and go up two directories
-    path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    path = os.path.join(path, 'cache')
-    os.makedirs(path, exist_ok=True)
-    return path
+    Director.CreateCacheFolder()
+    return Director.GetCacheRoot()
 
 
-def GetVersionNumber():
-    print("Check version number")
+def GetVersionNumber(freshPull):
+    if not freshPull:
+        print(f"> Skipping version check, freshPull = {freshPull}")
+        return
+    
+    print("> Check version number")
     # get version from manifest file
     manifestPaths = json.loads(urllib.request.urlopen(BUNGIE_API_BASE + "/Destiny2/Manifest/").read())["Response"]
     version = manifestPaths['version']
+
     cacheRoot = GetCacheFolder()
 
     # if version file exists and matches response, continue
@@ -49,7 +57,7 @@ def GetVersionNumber():
     # if version file does not exist or does not match
     print("Version check failed, deleting cache")
     # delete existing cache folder
-    shutil.rmtree(cacheRoot, ignore_errors=True)
+    Director.DeleteCacheFolder()
     print("Updating version")
     # create cache folder
     GetCacheFolder()
@@ -105,7 +113,10 @@ def GetClassDefinition():
     return CLASS_HASH
 
 
-def GetActivityNames():
+def GetActivityNames(freshPull):
+    # do we need this anymore?
+    return None
+
     data = GetManifestDefinitions("DestinyActivityDefinition")
 
     result = {str(data[k]["hash"]): data[k]["displayProperties"]["name"] for k in data.keys()}

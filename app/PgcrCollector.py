@@ -3,35 +3,46 @@ from itertools import zip_longest
 
 from app.Director import Director
 from app.bungieapi import BungieApi
+from app.data.onslaughthash import ONSLAUGHT_ACTIVITIES
 import json
 
 from app.internal_timer import Timer
 
 
 class PGCRCollector:
-    def __init__(self, membershipType, membershipId, api: BungieApi, pool) -> None:
+    def __init__(self, clanName, memberObj, api: BungieApi, pool) -> None:
         super().__init__()
         self.processPool = pool
-        self.membershipType = membershipType
-        self.membershipId = membershipId
+        self.membershipType = memberObj['membershipType']
+        self.membershipId = memberObj['membershipId']
+        self.clanName = clanName
         self.api = api
         self.characters = None
         self.activities = None
-        self.displayName = None
+        bungieGlobalDisplayName = self.membershipId
+        bungieGlobalDisplayName = memberObj['displayName'] # default name
+        if 'bungieGlobalDisplayName' in memberObj:
+            bungieGlobalDisplayName = memberObj['bungieGlobalDisplayName']
+        bungieGlobalDisplayNameCode = 0
+        if 'bungieGlobalDisplayNameCode' in memberObj:
+            bungieGlobalDisplayNameCode = memberObj['bungieGlobalDisplayNameCode']
+        self.displayName = f'{bungieGlobalDisplayName}[{bungieGlobalDisplayNameCode:04d}]'
 
 
     def getProfile(self):
-        print("> Get profile")
-        account_profile = self.api.getProfile(self.membershipType, self.membershipId)
-        bungieGlobalDisplayName = account_profile['profile']['data']['userInfo']['bungieGlobalDisplayName']
-        bungieGlobalDisplayNameCode = account_profile['profile']['data']['userInfo']['bungieGlobalDisplayNameCode']
-        self.displayName = f'{bungieGlobalDisplayName}[{bungieGlobalDisplayNameCode}]'
-        print(f"> Found profile: {self.displayName}")
+        #print("> Get profile")
+        #account_profile = self.api.getProfile(self.membershipType, self.membershipId)
+        # some users who haven't signed into Bungie.net or haven't turned on cross-save won't have newer bungie name
+        print(f"Found profile: {self.getDisplayName()}")
         return self
     
 
     def getDisplayName(self):
         return self.displayName
+    
+
+    def getCharacterList(self):
+        return self.characters
 
 
     def getCharacters(self):
@@ -39,7 +50,8 @@ class PGCRCollector:
         account_stats = self.api.getAccountStats(self.membershipType, self.membershipId)
         allCharacters = account_stats['characters']
         self.characters = [c["characterId"] for c in allCharacters]
-        print("> Found characters: ", len(self.characters))
+        print("Found characters: ", len(self.characters))
+        characters = {}
         for char in allCharacters:
             deleted = char['deleted']
             if deleted:
@@ -53,16 +65,17 @@ class PGCRCollector:
     def getActivities(self, limit=None):
         print("> Get Activities")
         assert self.characters is not None
+        assert self.displayName is not None
         assert len(self.characters) > 0
 
-        existingPgcrList = [f[5:-5] for f in os.listdir(Director.GetPGCRDirectory(self.displayName))]
+        existingPgcrList = [f[5:-5] for f in os.listdir(Director.GetPGCRDirectoryMember(self.clanName, self.displayName))]
 
         self.activities = []
         for k, char_id in enumerate(self.characters):
             page = 0
 
             def downloadActivityPage(page):
-                act = self.api.getActivities(self.membershipType, self.membershipId, char_id, page=page)
+                act = self.api.getActivities(self.membershipType, self.membershipId, char_id, page=page, mode=86)
                 if "activities" not in act:
                     return None
                 return [e["activityDetails"]["instanceId"] for e in act["activities"] if e["activityDetails"]["instanceId"] not in existingPgcrList]
@@ -104,7 +117,11 @@ class PGCRCollector:
                 tries += 1
                 pgcr = bungo.getPGCR(id)
 
-            with open("%s/pgcr_%s.json" % (Director.GetPGCRDirectory(self.displayName), pgcr["activityDetails"]["instanceId"]), "w", encoding='utf-8') as f:
+            # check it's a PGCR we want
+            if pgcr['activityDetails']['referenceId'] not in ONSLAUGHT_ACTIVITIES:
+                pgcr['skip'] = True
+
+            with open("%s/pgcr_%s.json" % (Director.GetPGCRDirectoryMember(self.clanName, self.displayName), pgcr["activityDetails"]["instanceId"]), "w", encoding='utf-8') as f:
                 f.write(json.dumps(pgcr))
 
         if len(self.activities) == 0:
@@ -113,6 +130,7 @@ class PGCRCollector:
 
         from tqdm.auto import tqdm   
         list(tqdm(self.processPool.imap(downloadPGCR, self.activities), total=len(self.activities), desc="Downloading PGCRs"))
+        self.processPool
         return self
 
 
@@ -139,7 +157,7 @@ class PGCRCollector:
             return r
 
         with Timer("Get all PGCRs from individual files"):
-            root = Director.GetPGCRDirectory(self.displayName)
+            root = Director.GetPGCRDirectoryMember(self.clanName, self.displayName)
             fileList = ["%s/%s" % (root, f) for f in os.listdir(root)]
             chunks = list(zip_longest(*[iter(fileList)] * 100, fillvalue=None))
             pgcrs = self.processPool.amap(loadJson, chunks).get()

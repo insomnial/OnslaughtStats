@@ -11,26 +11,75 @@ from app.internal_timer import Timer
 class ClanCollector:
     def __init__(self, clanId, api: BungieApi) -> None:
         super().__init__()
-        self.clanId = clanId
         self.api = api
-        self.members = None
+        #save these to cache
+        self.clanId = clanId
         self.displayName = None
         self.clanMemberCount = None
+        self.clanMemberList = None
+
+        self.members = None
 
     
-    def update(self):
-        print(f"> Get clan profile")
-        clanResults = self.api.getClanProfile(self.clanId)
-        # name:"Borrowed Strategies"
-        # memberCount:86
-        self.displayName = clanResults['detail']['name']
-        self.clanMemberCount = clanResults['detail']['memberCount']
-        print(f"Found clan: {self.displayName}, {self.clanMemberCount} members")
+    def update(self, freshPull):
+        if freshPull:
+            print(f"> Get clan profile")
+            clanResults = self.api.getClanProfile(self.clanId)
+            self.displayName = clanResults['detail']['name']
+            self.clanMemberCount = clanResults['detail']['memberCount']
+            # save clan information in cache
+            self.SaveClanToCache()
+            print(f"Found clan: {self.displayName}")
+        else:
+            print(f"> Get clan profile from cache")
+            self.RestoreClanFromCache()
+            print(f"Restored clan from cache")
         return self
+
+
+    def SaveClanToCache(self):
+        # saves the clan id, name, and member list to a cache file
+        clanCache = {}
+        clanCache['clanId'] = self.clanId
+        clanCache['displayName'] = self.displayName
+        clanCache['clanMemberCount'] = self.clanMemberCount
+        clanCache['clanMemberList'] = self.clanMemberList
+        cacheRoot = Director.GetCacheRoot()
+        clanFilePath = os.path.join(cacheRoot, str(self.clanId))
+        with open(file=clanFilePath, mode='w', encoding='utf-8') as f:
+            json.dump(obj=clanCache, fp=f)
+            
+
+    def RestoreClanFromCache(self):
+        # restores a clan object from a cache file
+        cacheRoot = Director.GetCacheRoot()
+        clanFilePath = os.path.join(cacheRoot, str(self.clanId))
+        with open(file=clanFilePath, mode='r', encoding='utf-8') as f:
+            clanCache = json.load(f)
+        self.displayName = clanCache['displayName']
+        self.clanMemberCount = clanCache['clanMemberCount']
+        self.clanMemberList = clanCache['clanMemberList']
 
 
     def getDisplayName(self):
         return self.displayName
+    
+
+    def getClanMemberList(self, freshPull):
+        if freshPull:
+            print(f"> Get clan members")
+            self.clanMemberList = (self.api.getClanMembers(self.clanId))['results']
+            # save to cache
+            self.SaveClanToCache()
+            print(f"Found {self.clanMemberCount} members")
+        else:
+            print("> Get clan members from cache")
+            return self
+        return self
+    
+    
+    def getClanMembers(self):
+        return self.clanMemberList
 
 
     def getCharacters(self):
@@ -54,7 +103,7 @@ class ClanCollector:
         assert self.characters is not None
         assert len(self.characters) > 0
 
-        existingPgcrList = [f[5:-5] for f in os.listdir(Director.GetPGCRDirectory(self.displayName))]
+        existingPgcrList = [f[5:-5] for f in os.listdir(Director.GetPGCRDirectoryRoot(self.displayName))]
 
         self.activities = []
         for k, char_id in enumerate(self.characters):
@@ -103,7 +152,7 @@ class ClanCollector:
                 tries += 1
                 pgcr = bungo.getPGCR(id)
 
-            with open("%s/pgcr_%s.json" % (Director.GetPGCRDirectory(self.displayName), pgcr["activityDetails"]["instanceId"]), "w", encoding='utf-8') as f:
+            with open("%s/pgcr_%s.json" % (Director.GetPGCRDirectoryRoot(self.displayName), pgcr["activityDetails"]["instanceId"]), "w", encoding='utf-8') as f:
                 f.write(json.dumps(pgcr))
 
         if len(self.activities) == 0:
@@ -138,7 +187,7 @@ class ClanCollector:
             return r
 
         with Timer("Get all PGCRs from individual files"):
-            root = Director.GetPGCRDirectory(self.displayName)
+            root = Director.GetPGCRDirectoryRoot(self.displayName)
             fileList = ["%s/%s" % (root, f) for f in os.listdir(root)]
             chunks = list(zip_longest(*[iter(fileList)] * 100, fillvalue=None))
             pgcrs = self.processPool.amap(loadJson, chunks).get()

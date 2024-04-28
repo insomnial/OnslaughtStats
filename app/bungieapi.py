@@ -11,9 +11,21 @@ class BungieApi:
         self.__HEADERS = {"X-API-Key": api_key}
         pass
 
+    def checkResponse(errorCode):
+        if errorCode // 100 != 2:
+            print("ERROR in API request")
+            breakpoint
+
 
     def getClanProfile(self, clanId):
         api_call = requests.get(f'{API_ROOT_PATH}/GroupV2/{clanId}/', headers=self.__HEADERS)
+        BungieApi.checkResponse(api_call.status_code)
+        return (api_call.json())['Response']
+    
+
+    def getClanMembers(self, clanId):
+        api_call = requests.get(f'{API_ROOT_PATH}/GroupV2/{clanId}/Members/', headers=self.__HEADERS)
+        BungieApi.checkResponse(api_call.status_code)
         return (api_call.json())['Response']
 
 
@@ -22,6 +34,7 @@ class BungieApi:
         if components is not None: params["components"] = components
 
         api_call = requests.get(f'{API_ROOT_PATH}/Destiny2/{membershipType}/Profile/{destinyMembershipId}', headers=self.__HEADERS, params=params)
+        BungieApi.checkResponse(api_call.status_code)
 
         return (api_call.json())['Response']
 
@@ -30,7 +43,7 @@ class BungieApi:
         params = {}
 
         api_call = requests.get(f'{API_ROOT_PATH}/Destiny2/{membershipType}/Account/{destinyMembershipId}/Stats', headers=self.__HEADERS, params=params)
-
+        BungieApi.checkResponse(api_call.status_code)
         return (api_call.json())['Response']
 
 
@@ -41,6 +54,7 @@ class BungieApi:
         if mode is not None: params["mode"] = mode
 
         api_call = requests.get(f'{API_ROOT_PATH}/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/Activities/', headers=self.__HEADERS, params=params)
+        BungieApi.checkResponse(api_call.status_code)
         json_ = (api_call.json())
         if ("Response" not in json_):
             print(json_)
@@ -54,6 +68,7 @@ class BungieApi:
             api_call = requests.get(f'{API_ROOT_PATH}/Destiny2/Stats/PostGameCarnageReport/{activityId}/', headers=self.__HEADERS, params=params, timeout=(10, 10))
         except:
             return None
+        BungieApi.checkResponse(api_call.status_code)
         return (api_call.json())['Response']
 
 
@@ -70,7 +85,7 @@ class BungieApi:
         except:
             return None
         
+        BungieApi.checkResponse(api_call.status_code)
         classHash = (api_call.json())['Response']['character']['data']['classHash']
-
         return CLASS_HASH[classHash]
     
