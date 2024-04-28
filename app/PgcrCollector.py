@@ -10,36 +10,39 @@ from app.internal_timer import Timer
 
 
 class PGCRCollector:
-    def __init__(self, membershipType, membershipId, clanName, api: BungieApi, pool) -> None:
+    def __init__(self, clanName, memberObj, api: BungieApi, pool) -> None:
         super().__init__()
         self.processPool = pool
-        self.membershipType = membershipType
-        self.membershipId = membershipId
+        self.membershipType = memberObj['membershipType']
+        self.membershipId = memberObj['membershipId']
         self.clanName = clanName
         self.api = api
         self.characters = None
         self.activities = None
-        self.displayName = None
+        bungieGlobalDisplayName = self.membershipId
+        bungieGlobalDisplayName = memberObj['displayName'] # default name
+        if 'bungieGlobalDisplayName' in memberObj:
+            bungieGlobalDisplayName = memberObj['bungieGlobalDisplayName']
+        bungieGlobalDisplayNameCode = 0
+        if 'bungieGlobalDisplayNameCode' in memberObj:
+            bungieGlobalDisplayNameCode = memberObj['bungieGlobalDisplayNameCode']
+        self.displayName = f'{bungieGlobalDisplayName}[{bungieGlobalDisplayNameCode:04d}]'
 
 
     def getProfile(self):
         #print("> Get profile")
-        account_profile = self.api.getProfile(self.membershipType, self.membershipId)
+        #account_profile = self.api.getProfile(self.membershipType, self.membershipId)
         # some users who haven't signed into Bungie.net or haven't turned on cross-save won't have newer bungie name
-        bungieGlobalDisplayName = self.membershipId
-        bungieGlobalDisplayName = account_profile['profile']['data']['userInfo']['displayName'] # default name
-        if 'bungieGlobalDisplayName' in account_profile['profile']['data']['userInfo']:
-            bungieGlobalDisplayName = account_profile['profile']['data']['userInfo']['bungieGlobalDisplayName']
-        bungieGlobalDisplayNameCode = '0000'
-        if 'bungieGlobalDisplayNameCode' in account_profile['profile']['data']['userInfo']:
-            bungieGlobalDisplayNameCode = account_profile['profile']['data']['userInfo']['bungieGlobalDisplayNameCode']
-        self.displayName = f'{bungieGlobalDisplayName}[{bungieGlobalDisplayNameCode}]'
-        print(f"Found profile: {self.displayName}")
+        print(f"Found profile: {self.getDisplayName()}")
         return self
     
 
     def getDisplayName(self):
         return self.displayName
+    
+
+    def getCharacterList(self):
+        return self.characters
 
 
     def getCharacters(self):
@@ -48,6 +51,7 @@ class PGCRCollector:
         allCharacters = account_stats['characters']
         self.characters = [c["characterId"] for c in allCharacters]
         print("Found characters: ", len(self.characters))
+        characters = {}
         for char in allCharacters:
             deleted = char['deleted']
             if deleted:
@@ -115,7 +119,7 @@ class PGCRCollector:
 
             # check it's a PGCR we want
             if pgcr['activityDetails']['referenceId'] not in ONSLAUGHT_ACTIVITIES:
-                return
+                pgcr['skip'] = True
 
             with open("%s/pgcr_%s.json" % (Director.GetPGCRDirectoryMember(self.clanName, self.displayName), pgcr["activityDetails"]["instanceId"]), "w", encoding='utf-8') as f:
                 f.write(json.dumps(pgcr))
@@ -126,6 +130,7 @@ class PGCRCollector:
 
         from tqdm.auto import tqdm   
         list(tqdm(self.processPool.imap(downloadPGCR, self.activities), total=len(self.activities), desc="Downloading PGCRs"))
+        self.processPool
         return self
 
 
