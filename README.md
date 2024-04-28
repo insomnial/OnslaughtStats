@@ -15,7 +15,7 @@
 
 # How to use?
 1) Install all required packages
-   1) `python3 -m pip install pandas plotly pathos requests pretty_html_table bar-chart-race tqdm`
+   1) `python3 -m pip install pandas plotly pathos requests pretty_html_table bar-chart-race tqdm prettytable`
 2) Set your API key as an environemnt variable `BUNGIE_API_KEY`.  Get the key [here](https://www.bungie.net/en/Application).
    1) Alternatively: Add your api key to `main.py`. For this, edit `# API_KEY = "123456789"`.
 3) Edit your user info in `main.py`. Alternatively, you can also use command line parameters to set this.
