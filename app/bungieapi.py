@@ -13,8 +13,7 @@ class BungieApi:
 
     def checkResponse(errorCode):
         if errorCode // 100 != 2:
-            print("ERROR in API request")
-            breakpoint
+            print(f"ERROR in API request. {errorCode}")
 
 
     def getClanProfile(self, clanId):
