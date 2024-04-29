@@ -1,6 +1,6 @@
 import json, urllib.request, os, shutil
 
-from app.Director import Director
+from app.LocalController import LocalController
 from app.data.activities import ACTIVITY_NAMES
 from app.data.classhash import CLASS_HASH
 
@@ -18,7 +18,7 @@ class DestinyManifest():
 
 
     def update(self, freshPull):
-        self.CacheFolder = Director.GetCacheRoot()
+        self.CacheFolder = LocalController.GetCacheRoot()
         self.ActivityTypeNames = GetActivityTypeNames()
         self.VersionNumber = GetVersionNumber(freshPull)
         self.ActivityNames = GetActivityNames(freshPull)
@@ -33,8 +33,8 @@ class DestinyManifest():
     
 
 def GetCacheFolder():
-    Director.CreateCacheFolder()
-    return Director.GetCacheRoot()
+    LocalController.CreateCacheFolder()
+    return LocalController.GetCacheRoot()
 
 
 def GetVersionNumber(freshPull):
@@ -57,7 +57,7 @@ def GetVersionNumber(freshPull):
     # if version file does not exist or does not match
     print("Version check failed, deleting cache")
     # delete existing cache folder
-    Director.DeleteCacheFolder()
+    LocalController.DeleteCacheFolder()
     print("Updating version")
     # create cache folder
     GetCacheFolder()

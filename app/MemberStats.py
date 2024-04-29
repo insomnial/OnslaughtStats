@@ -7,7 +7,7 @@
 #
 ###############################################################################
 
-from app.Director import Director
+from app.LocalController import LocalController
 from app.data.onslaughthash import ONSLAUGHT_ACTIVITIES
 
 class MemberStats:
@@ -69,7 +69,7 @@ class MemberStats:
 
 
     def getPGCRDirectory(self):
-        return Director.GetPGCRDirectoryMember(self.clanName, self.displayName)
+        return LocalController.GetPGCRDirectoryMember(self.clanName, self.displayName)
     
 
     def getDisplayName(self):

@@ -1,7 +1,7 @@
-from app.Director import Director
+from app.LocalController import LocalController
 from app.ManifestController import DestinyManifest
 from app.PgcrCollector import PGCRCollector
-from app.bungieapi import BungieApi
+from app.ApiController import ApiController
 from app.ClanCollector import ClanCollector
 from app.data.onslaughthash import ONSLAUGHT_ACTIVITIES
 from app.MemberStats import MemberStats
@@ -48,11 +48,11 @@ if __name__ == '__main__':
         # Manually set API key
         API_KEY = '123456789' 
     
-    Director.CreateCacheFolder()
+    LocalController.CreateCacheFolder()
 
     # check manifest
     manifest = DestinyManifest().update(freshPull)
-    api = BungieApi(API_KEY)
+    api = ApiController(API_KEY)
 
     # create clan holder
     cc = ClanCollector(clan, api)
@@ -60,9 +60,9 @@ if __name__ == '__main__':
     clanName = cc.getDisplayName()
 
     # set up results directories
-    Director.CreateDirectoriesForClan(clanName)
-    Director.ClearResultDirectory(clanName)
-    Director.CreateDirectoriesForClan(clanName)
+    LocalController.CreateDirectoriesForClan(clanName)
+    LocalController.ClearResultDirectory(clanName)
+    LocalController.CreateDirectoriesForClan(clanName)
 
     # populate clan members
     cc.getClanMemberList(freshPull)
@@ -80,7 +80,7 @@ if __name__ == '__main__':
         memberUserId = member['membershipId']
         pc = PGCRCollector(clanName, member, api, pool)
         memberDisplayName = pc.getProfile().getDisplayName()
-        Director.CreateDirectoriesForMember(clanName, memberDisplayName)
+        LocalController.CreateDirectoriesForMember(clanName, memberDisplayName)
 
         if freshPull:
             pc.getCharacters().getActivities(limit=None).getPGCRs()

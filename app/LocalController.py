@@ -2,11 +2,11 @@ import shutil
 from pathlib import Path
 
 
-class Director:
+class LocalController:
 
     @staticmethod
     def ClearResultDirectory(clanName):
-        path = Director.GetResultDirectory(clanName)
+        path = LocalController.GetResultDirectory(clanName)
         shutil.rmtree(path)
 
     @staticmethod
@@ -31,19 +31,19 @@ class Director:
     
     @staticmethod
     def CreateDirectoriesForClan(clanName):
-        Path(Director.GetResultDirectory(clanName)).mkdir(parents=True, exist_ok=True)
-        Path(Director.GetPGCRDirectoryRoot(clanName)).mkdir(parents=True, exist_ok=True)
+        Path(LocalController.GetResultDirectory(clanName)).mkdir(parents=True, exist_ok=True)
+        Path(LocalController.GetPGCRDirectoryRoot(clanName)).mkdir(parents=True, exist_ok=True)
     
     @staticmethod
     def CreateDirectoriesForMember(clanName, memberName):
-        Path(Director.GetPGCRDirectoryMember(clanName, memberName)).mkdir(parents=True, exist_ok=True)
+        Path(LocalController.GetPGCRDirectoryMember(clanName, memberName)).mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def CreateCacheFolder():
-        Path(Director.GetCacheRoot()).mkdir(parents=True, exist_ok=True)
+        Path(LocalController.GetCacheRoot()).mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def DeleteCacheFolder():
-        shutil.rmtree(Director.GetCacheRoot(), ignore_errors=True)
+        shutil.rmtree(LocalController.GetCacheRoot(), ignore_errors=True)
 
         
