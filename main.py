@@ -98,7 +98,7 @@ if __name__ == '__main__':
             mb = None
 
     
-    SimpleTable.generateAttemptsTable(memberObjects)
+    SimpleTable.generateAttemptsTable(clanName, memberObjects)
 
 
     pool.close()

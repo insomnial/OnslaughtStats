@@ -4,12 +4,14 @@
 
 from prettytable import PrettyTable
 from app.MemberStats import MemberStats
+from app.LocalController import LocalController
+import os
 
 class SimpleTable():
     def __init__() -> None:
         pass
 
-    def generateAttemptsTable(memberObjects):
+    def generateAttemptsTable(clanName, memberObjects):
         # table column headers
         COL_NAME = 'Name'
         COL_LPER = 'Leg Comp %'
@@ -86,19 +88,65 @@ class SimpleTable():
         tab.align[COL_HSPL] = 'r'
         tab.align[COL_HSTE] = 'r'
 
+        # legend
         tab.sortby = COL_LCOM
-        legendCompletions = tab.get_string(fields=[COL_NAME, COL_LCOM])
-
+        reportLegendCompletions = tab.get_string(fields=[COL_NAME, COL_LCOM])
         tab.sortby = COL_LATT
-        legendAttempts = tab.get_string(fields=[COL_NAME, COL_LATT])
+        reportLegendAttempts = tab.get_string(fields=[COL_NAME, COL_LATT])
+        tab.sortby = COL_LPER
+        reportLegendPercent = tab.get_string(fields=[COL_NAME, COL_LPER])
 
+        # normal
+        tab.sortby = COL_NCOM
+        reportNormalCompletions = tab.get_string(fields=[COL_NAME, COL_NCOM])
+        tab.sortby = COL_NATT
+        reportNormalAttempts = tab.get_string(fields=[COL_NAME, COL_NATT])
+        tab.sortby = COL_NPER
+        reportNormalPercent = tab.get_string(fields=[COL_NAME, COL_NPER])
+
+        # playlist
+        tab.sortby = COL_PCOM
+        reportPlaylistCompletions = tab.get_string(fields=[COL_NAME, COL_PCOM])
+        tab.sortby = COL_PATT
+        reportPlaylistAttempts = tab.get_string(fields=[COL_NAME, COL_PATT])
+        tab.sortby = COL_PPER
+        reportPlaylistPercent = tab.get_string(fields=[COL_NAME, COL_PPER])
+
+        # total
         tab.sortby = COL_TCOM
-        totalCompletions = tab.get_string(fields=[COL_NAME, COL_TCOM])
+        reportTotalCompletions = tab.get_string(fields=[COL_NAME, COL_TCOM])
+        tab.sortby = COL_TATT
+        reportTotalAttempts = tab.get_string(fields=[COL_NAME, COL_TATT])
+        tab.sortby = COL_TPER
+        reportTotalPercent = tab.get_string(fields=[COL_NAME, COL_TPER])
 
+        #points
         tab.sortby = COL_HSPL
         playerPoints = tab.get_string(fields=[COL_NAME, COL_HSPL])
-
         tab.sortby = COL_HSTE
         teamPoints = tab.get_string(fields=[COL_NAME, COL_HSTE])
 
-        print(teamPoints)
+        reports = [
+            reportLegendCompletions,
+            reportLegendAttempts,
+            reportLegendPercent,
+            reportNormalCompletions,
+            reportNormalAttempts,
+            reportNormalPercent,
+            reportPlaylistCompletions,
+            reportPlaylistAttempts,
+            reportPlaylistPercent,
+            reportTotalCompletions,
+            reportTotalAttempts,
+            reportTotalPercent,
+            playerPoints,
+            teamPoints
+        ]
+
+        resultsFolderPath = LocalController.GetResultDirectory(clanName)
+        with open(os.path.join(resultsFolderPath, f'{clanName}.txt'), mode='w', encoding='utf-8') as f:
+            for report in reports:
+                f.write(report)
+                f.write('\n\n')
+
+        print(reportTotalPercent)
