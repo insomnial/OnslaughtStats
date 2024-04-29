@@ -20,11 +20,17 @@ class MemberStats:
         self.onslaughtPGCRs = []
         self.totalAttempted = 0
         self.totalCompleted = 0
+        self.playlistTotalAttemtped = 0
+        self.playlistTotalCompleted = 0
+        self.normalTotalAttempted = 0
+        self.normalTotalCompleted = 0
+        self.legendTotalAttempted = 0
+        self.legendTotalCompleted = 0
         self.totalDuration = 0
         self.totalKills = 0
         self.totalDeaths = 0
         self.totalAssists = 0
-        self.Playlist = 0  # 2769402771
+        self.Playlist = 0                    # 2769402771
         self.MidtownPlaylistAttempted = 0    # 203968370     10-wave playlist
         self.MidtownPlaylistCompleted = 0    # 203968370     10-wave playlist
         self.MidtownNormalAttempted = 0      # 2295195925    50-wave normal
@@ -43,7 +49,7 @@ class MemberStats:
         self.VostokNormalCompleted = 0       # 3439345485    50-wave normal
         self.VostokLegendAttempted = 0       # 264092439     50-wave legend
         self.VostokLegendCompleted = 0       # 264092439     50-wave legend
-        self.totalPlayerScore = 0         # ['entries']['score']['basic']['value']
+        self.totalPlayerScore = 0            # ['entries']['score']['basic']['value']
         self.totalTeamScore = 0
         self.highestPlayerScore = 0
         self.highestTeamScore = 0
@@ -123,30 +129,48 @@ class MemberStats:
                 case 203968370: #'Midtown'
                     self.MidtownPlaylistAttempted += attempted
                     self.MidtownPlaylistCompleted += completedReasonValue
+                    self.playlistTotalAttemtped += attempted
+                    self.playlistTotalCompleted += completedReasonValue
                 case 2295195925: #'Midtown: Onslaught'
                     self.MidtownNormalAttempted += attempted
                     self.MidtownNormalCompleted += completedReasonValue
+                    self.normalTotalAttempted += attempted
+                    self.normalTotalCompleted += completedReasonValue
                 case 2064836415: #'Legend: Midtown: Onslaught'
                     self.MidtownLegendAttempted += attempted
                     self.MidtownLegendCompleted += completedReasonValue
+                    self.legendTotalAttempted += attempted
+                    self.legendTotalCompleted += completedReasonValue
                 case 2063776142: #'Mothyards'
                     self.MothyardsPlaylistAttempted += attempted
                     self.MothyardsPlaylistCompleted += completedReasonValue
+                    self.playlistTotalAttemtped += attempted
+                    self.playlistTotalCompleted += completedReasonValue
                 case 887771978: #'Mothyards: Onslaught'
                     self.MothyardsNormalAttempted += attempted
                     self.MothyardsNormalCompleted += completedReasonValue
+                    self.normalTotalAttempted += attempted
+                    self.normalTotalCompleted += completedReasonValue
                 case 447898400: #'Legend: Mothyards: Onslaught'
                     self.MothyardsLegendAttempted += attempted
                     self.MothyardsLegendCompleted += completedReasonValue
+                    self.legendTotalAttempted += attempted
+                    self.legendTotalCompleted += completedReasonValue
                 case 1428607109: #'Vostok'
                     self.VostokPlaylistAttempted += attempted
                     self.VostokPlaylistCompleted += completedReasonValue
+                    self.playlistTotalAttemtped += attempted
+                    self.playlistTotalCompleted += completedReasonValue
                 case 3439345485: #'Vostok: Onslaught'
                     self.VostokNormalAttempted += attempted
                     self.VostokNormalCompleted += completedReasonValue
+                    self.normalTotalAttempted += attempted
+                    self.normalTotalCompleted += completedReasonValue
                 case 264092439: #'Legend: Vostok: Onslaught
                     self.VostokLegendAttempted += attempted
                     self.VostokLegendCompleted += completedReasonValue
+                    self.legendTotalAttempted += attempted
+                    self.legendTotalCompleted += completedReasonValue
                 case _:
                     print(f'Unknown PGCR activity {filepath}')
 
