@@ -28,13 +28,15 @@ class SimpleTable():
         COL_TCOM = 'Tot Comp'
         COL_HSPL = 'Max Ply'
         COL_HSTE = 'Max Tea'
+        COL_TOPL = 'Tot Ply'
+        COL_TOTE = 'Tot Tea'
         # header row
         outputTable = [[COL_NAME,
                         COL_LPER, COL_LCOM, COL_LATT, 
                         COL_NPER, COL_NCOM, COL_NATT, 
                         COL_PPER, COL_PCOM, COL_PATT, 
                         COL_TPER, COL_TCOM, COL_TATT,
-                        COL_HSPL, COL_HSTE]]
+                        COL_HSPL, COL_HSTE, COL_TOPL, COL_TOTE]]
         # get user data
         for memberKey in memberObjects:
             memberObject = memberObjects[memberKey]
@@ -56,6 +58,9 @@ class SimpleTable():
             totalPercent = int(0 if totalCompleted == 0 else (totalCompleted / totalAttempted) * 100)
             highestPlayerScore = int(getattr(memberObject, 'highestPlayerScore'))
             highestTeamScore = int(getattr(memberObject, 'highestTeamScore'))
+            totalPlayerScore = int(getattr(memberObject, 'totalPlayerScore'))
+            totalTeamScore = int(getattr(memberObject, 'totalTeamScore'))
+
 
             # build user row
             outputTable.append(
@@ -65,7 +70,7 @@ class SimpleTable():
                     normalPercent, normalTotalCompleted, normalTotalAttempted,
                     playlistPercent, playlistTotalCompleted, playlistTotalAttemtped,
                     totalPercent, totalCompleted, totalAttempted,
-                    highestPlayerScore, highestTeamScore
+                    highestPlayerScore, highestTeamScore, totalPlayerScore, totalTeamScore
                 ]
             )
 
@@ -87,6 +92,8 @@ class SimpleTable():
         tab.align[COL_TCOM] = 'r'
         tab.align[COL_HSPL] = 'r'
         tab.align[COL_HSTE] = 'r'
+        tab.align[COL_TOPL] = 'r'
+        tab.align[COL_TOTE] = 'r'
 
         # legend
         tab.sortby = COL_LCOM
@@ -122,31 +129,37 @@ class SimpleTable():
 
         #points
         tab.sortby = COL_HSPL
-        playerPoints = tab.get_string(fields=[COL_NAME, COL_HSPL])
+        playerMaxPoints = tab.get_string(fields=[COL_NAME, COL_HSPL])
         tab.sortby = COL_HSTE
-        teamPoints = tab.get_string(fields=[COL_NAME, COL_HSTE])
+        teamMaxPoints = tab.get_string(fields=[COL_NAME, COL_HSTE])
+        tab.sortby = COL_TOPL
+        playerTotalPoints = tab.get_string(fields=[COL_NAME, COL_TOPL])
+        tab.sortby = COL_TOTE
+        teamTotalPoints = tab.get_string(fields=[COL_NAME, COL_TOTE])
 
-        reports = [
-            reportLegendCompletions,
-            reportLegendAttempts,
-            reportLegendPercent,
-            reportNormalCompletions,
-            reportNormalAttempts,
-            reportNormalPercent,
-            reportPlaylistCompletions,
-            reportPlaylistAttempts,
-            reportPlaylistPercent,
-            reportTotalCompletions,
-            reportTotalAttempts,
-            reportTotalPercent,
-            playerPoints,
-            teamPoints
-        ]
+        reports = {
+            COL_LCOM: reportLegendCompletions,
+            COL_LATT: reportLegendAttempts,
+            COL_LPER: reportLegendPercent,
+            COL_NCOM: reportNormalCompletions,
+            COL_NATT: reportNormalAttempts,
+            COL_NPER: reportNormalPercent,
+            COL_PCOM: reportPlaylistCompletions,
+            COL_PATT: reportPlaylistAttempts,
+            COL_PPER: reportPlaylistPercent,
+            COL_TCOM: reportTotalCompletions,
+            COL_TATT: reportTotalAttempts,
+            COL_TPER: reportTotalPercent,
+            COL_HSPL: playerMaxPoints,
+            COL_HSTE: teamMaxPoints,
+            COL_TOPL: playerTotalPoints,
+            COL_TOTE: teamTotalPoints
+        }
 
         resultsFolderPath = LocalController.GetResultDirectory(clanName)
-        with open(os.path.join(resultsFolderPath, f'{clanName}.txt'), mode='w', encoding='utf-8') as f:
-            for report in reports:
-                f.write(report)
+        for keys in reports.keys():
+            with open(os.path.join(resultsFolderPath, f'{keys}.txt'), mode='w', encoding='utf-8') as f:
+                f.write(reports[keys])
                 f.write('\n\n')
 
         print(reportTotalPercent)
