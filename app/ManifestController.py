@@ -114,9 +114,6 @@ def GetClassDefinition():
 
 
 def GetActivityNames(freshPull):
-    # do we need this anymore?
-    return None
-
     data = GetManifestDefinitions("DestinyActivityDefinition")
 
     result = {str(data[k]["hash"]): data[k]["displayProperties"]["name"] for k in data.keys()}

@@ -11,15 +11,30 @@ class ApiController:
         self.__HEADERS = {"X-API-Key": api_key}
         pass
 
-    def checkResponse(errorCode):
-        if errorCode // 100 != 2:
-            print(f"ERROR in API request. {errorCode}")
+
+    def wrapAPICall(self, apiString = None, params = None, timeout = None):
+        import time
+        for i in range(0, 3):
+            if params != None and timeout != None:
+                call = requests.get(apiString, headers=self.__HEADERS, params=params, timeout=timeout)
+            elif params != None and timeout == None:
+                call = requests.get(apiString, headers=self.__HEADERS, params=params)
+            else:
+                call = requests.get(apiString, headers=self.__HEADERS)
+
+            # break if it has no error
+            if call.status_code // 100 == 2:
+                return (call.json())['Response']
+            
+            # wait and try again
+            print(f"Attemp {i} failed. Error: {call.status_code}. Waiting three seconds and trying again.")
+            time.sleep(3)
+        print(f"API calls failed. Exiting...")
+        exit(2)
 
 
     def getClanProfile(self, clanId):
-        api_call = requests.get(f'{API_ROOT_PATH}/GroupV2/{clanId}/', headers=self.__HEADERS)
-        ApiController.checkResponse(api_call.status_code)
-        return (api_call.json())['Response']
+        return self.wrapAPICall(f'{API_ROOT_PATH}/GroupV2/{clanId}/')
     
 
     def getClanMembers(self, clanId):
