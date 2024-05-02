@@ -1,6 +1,5 @@
 from typing import Dict
 import requests
-from app.data.classhash import CLASS_HASH
 
 API_ROOT_PATH = "https://www.bungie.net/Platform"
 
@@ -15,20 +14,24 @@ class ApiController:
     def wrapAPICall(self, apiString = None, params = None, timeout = None):
         import time
         for i in range(0, 3):
-            if params != None and timeout != None:
-                call = requests.get(apiString, headers=self.__HEADERS, params=params, timeout=timeout)
-            elif params != None and timeout == None:
-                call = requests.get(apiString, headers=self.__HEADERS, params=params)
-            else:
-                call = requests.get(apiString, headers=self.__HEADERS)
+            call = requests.get(apiString, headers=self.__HEADERS, params=params, timeout=timeout)
+            # if params != None and timeout != None:
+            #     call = requests.get(apiString, headers=self.__HEADERS, params=params, timeout=timeout)
+            # elif params != None and timeout == None:
+            #     call = requests.get(apiString, headers=self.__HEADERS, params=params)
+            # else:
+            #     call = requests.get(apiString, headers=self.__HEADERS)
 
             # break if it has no error
             if call.status_code // 100 == 2:
                 return (call.json())['Response']
             
+            # TODO something else if the current player is in secret squirrel mode
+            
             # wait and try again
-            print(f"Attemp {i} failed. Error: {call.status_code}. Waiting three seconds and trying again.")
-            time.sleep(3)
+            DELAY = 5
+            print(f"Attemp {i + 1} failed. Error: {call.status_code}. Waiting {DELAY} seconds and trying again.")
+            time.sleep(DELAY)
         print(f"API calls failed. Exiting...")
         exit(2)
 
@@ -38,27 +41,20 @@ class ApiController:
     
 
     def getClanMembers(self, clanId):
-        api_call = requests.get(f'{API_ROOT_PATH}/GroupV2/{clanId}/Members/', headers=self.__HEADERS)
-        ApiController.checkResponse(api_call.status_code)
-        return (api_call.json())['Response']
+        return self.wrapAPICall(f'{API_ROOT_PATH}/GroupV2/{clanId}/Members/')
 
 
     def getProfile(self, membershipType, destinyMembershipId, components=[100]):
         params = {}
         if components is not None: params["components"] = components
 
-        api_call = requests.get(f'{API_ROOT_PATH}/Destiny2/{membershipType}/Profile/{destinyMembershipId}', headers=self.__HEADERS, params=params)
-        ApiController.checkResponse(api_call.status_code)
-
-        return (api_call.json())['Response']
+        return self.wrapAPICall('{API_ROOT_PATH}/Destiny2/{membershipType}/Profile/{destinyMembershipId}', params=params)
 
 
     def getAccountStats(self, membershipType, destinyMembershipId):
         params = {}
 
-        api_call = requests.get(f'{API_ROOT_PATH}/Destiny2/{membershipType}/Account/{destinyMembershipId}/Stats', headers=self.__HEADERS, params=params)
-        ApiController.checkResponse(api_call.status_code)
-        return (api_call.json())['Response']
+        return self.wrapAPICall(f'{API_ROOT_PATH}/Destiny2/{membershipType}/Account/{destinyMembershipId}/Stats', params=params)
 
 
     def getActivities(self, membershipType, destinyMembershipId, characterId, page=0, count=250, mode=None):
@@ -67,23 +63,13 @@ class ApiController:
         if count is not None: params["count"] = count
         if mode is not None: params["mode"] = mode
 
-        api_call = requests.get(f'{API_ROOT_PATH}/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/Activities/', headers=self.__HEADERS, params=params)
-        ApiController.checkResponse(api_call.status_code)
-        json_ = (api_call.json())
-        if ("Response" not in json_):
-            print(json_)
-        return json_['Response']
+        return self.wrapAPICall(f'{API_ROOT_PATH}/Destiny2/{membershipType}/Account/{destinyMembershipId}/Character/{characterId}/Stats/Activities/', params=params)
 
 
     def getPGCR(self, activityId):
         params = {}
 
-        try:
-            api_call = requests.get(f'{API_ROOT_PATH}/Destiny2/Stats/PostGameCarnageReport/{activityId}/', headers=self.__HEADERS, params=params, timeout=(10, 10))
-        except:
-            return None
-        ApiController.checkResponse(api_call.status_code)
-        return (api_call.json())['Response']
+        return self.wrapAPICall(f'{API_ROOT_PATH}/Destiny2/Stats/PostGameCarnageReport/{activityId}/', params=params, timeout=(10, 10))
 
 
     def getItem(self, itemReferenceId):
@@ -91,15 +77,10 @@ class ApiController:
     
 
     def getCharacterClass(self, membershipType, destinyMembershipId, characterId):
+        from app.data.classhash import CLASS_HASH
+
         params = {}
         params['components'] = 200
 
-        try:
-            api_call = requests.get(f'{API_ROOT_PATH}/Destiny2/{membershipType}/Profile/{destinyMembershipId}/Character/{characterId}', headers=self.__HEADERS, params=params, timeout=(10, 10))
-        except:
-            return None
-        
-        ApiController.checkResponse(api_call.status_code)
-        classHash = (api_call.json())['Response']['character']['data']['classHash']
+        classHash = (self.wrapAPICall(f'{API_ROOT_PATH}/Destiny2/{membershipType}/Profile/{destinyMembershipId}/Character/{characterId}', params=params, timeout=(10, 10)))['character']['data']['classHash']
         return CLASS_HASH[classHash]
-    
