@@ -1,5 +1,4 @@
 from app.LocalController import LocalController
-from app.ManifestController import DestinyManifest
 from app.PgcrCollector import PGCRCollector
 from app.ApiController import ApiController
 from app.ClanCollector import ClanCollector
@@ -51,8 +50,7 @@ if __name__ == '__main__':
     LocalController.CreateCacheFolder()
 
     # check manifest
-    manifest = DestinyManifest().update(freshPull)
-    api = ApiController(API_KEY)
+    api = ApiController(api_key=API_KEY, freshPull=freshPull)
 
     # create clan holder
     cc = ClanCollector(clan, api)
@@ -74,19 +72,18 @@ if __name__ == '__main__':
     # pool = ProcessPool(40)
     memberObjects = {}
     # populate PGCRs from clan members
-    for member in tqdm(cc.getClanMembers(), desc="> Fetching clan member PGCRs"):
-        member = member['destinyUserInfo']
-        memberPlatform = member['membershipType']
-        memberUserId = member['membershipId']
-        pc = PGCRCollector(clanName, member, api, pool)
-        memberDisplayName = pc.getProfile().getDisplayName()
-        LocalController.CreateDirectoriesForMember(clanName, memberDisplayName)
+    if freshPull:
+        for member in tqdm(cc.getClanMembers(), desc="> Fetching clan member PGCRs"):
+            member = member['destinyUserInfo']
+            memberPlatform = member['membershipType']
+            memberUserId = member['membershipId']
+            pc = PGCRCollector(clanName, member, api, pool)
+            memberDisplayName = pc.getProfile().getDisplayName()
+            LocalController.CreateDirectoriesForMember(clanName, memberDisplayName)
 
-        if freshPull:
             pc.getCharacters().getActivities(limit=None).getPGCRs()
-            #data = pc.getAllPgcrs()
             time.sleep(1.0) # I was getting weird 503 errors without this
-    
+        
     if generateReport:
         for member in cc.getClanMembers():
             member = member['destinyUserInfo']

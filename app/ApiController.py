@@ -1,17 +1,66 @@
 from typing import Dict
-import requests
+from app.data.classhash import CLASS_HASH
+from app.data.activities import ACTIVITY_NAMES
+from app.LocalController import LocalController
+import requests, os, json
 
-API_ROOT_PATH = "https://www.bungie.net/Platform"
+API_ROOT_PATH = 'https://www.bungie.net/Platform'
+BUNGIE_BASE = 'https://www.bungie.net'
 
 class ApiController:
     __HEADERS: Dict[str, str]
 
-    def __init__(self, api_key: str):
-        self.__HEADERS = {"X-API-Key": api_key}
+    def __init__(self, api_key: str, freshPull = False):
+        self.__HEADERS = {'X-API-Key': api_key}
+        self.VersionNumber = self.GetVersionNumber(freshPull)
+        self.ActivityTypeNames = ACTIVITY_NAMES
+        self.ClassHash = CLASS_HASH
         pass
 
+    def GetVersionNumber(self, freshPull):
+        if not freshPull:
+            print(f"> version check, freshPull = {freshPull}")
+            return
 
-    def wrapAPICall(self, apiString = None, params = None, timeout = None):
+        print("> Check version number")
+        # get version from manifest file
+        manifestPaths = self.wrapAPICall(apiString=f'{API_ROOT_PATH}/Destiny2/Manifest/')
+        version = manifestPaths['version']
+
+        # if version file exists and matches response, continue
+        if os.path.exists(os.path.join(LocalController.GetCacheRoot(), version)):
+            print("Version check passed")
+            return
+
+        # if version file does not exist or does not match
+        print("Version check failed, deleting cache")
+        # delete existing cache folder
+        LocalController.DeleteCacheFolder()
+        print("Updating version")
+        versionFilePath = os.path.join(LocalController.GetCacheRoot(), version)
+        # create new version file
+        with open(file=versionFilePath, mode='w', encoding='utf-8') as f:
+            f.write(version)
+
+
+    def SaveToCache(aDefinition, aJsonBlob):
+        # set root path
+        filePath = os.path.join(LocalController.GetCacheRoot(), aDefinition)
+        with open(file=filePath, mode='w', encoding='utf-8') as f:
+            json.dump(aJsonBlob, f, ensure_ascii=False, indent=4)
+
+
+    def LoadFromCache(aDefinition):
+        filePath = os.path.join(LocalController.GetCacheRoot(), aDefinition)
+        exists = os.path.exists(filePath)
+        if not exists:
+            return None, False
+        with open(file=filePath, mode='r', encoding='utf-8') as f:
+            blob = json.load(f)
+        return blob, True
+
+
+    def wrapAPICall(self, apiString: str, params = None, timeout = None):
         import time
         for i in range(0, 3):
             call = requests.get(apiString, headers=self.__HEADERS, params=params, timeout=timeout)
@@ -26,7 +75,11 @@ class ApiController:
             if call.status_code // 100 == 2:
                 return (call.json())['Response']
             
-            # TODO something else if the current player is in secret squirrel mode
+            errorJson = json.loads(call.text)
+            if 'ErrorCode' in errorJson:
+                errorCode = errorJson['ErrorCode']
+                if errorCode == 1665: # privacy settings enabled for user
+                    return errorJson
             
             # wait and try again
             DELAY = 5
@@ -38,7 +91,7 @@ class ApiController:
 
     def getClanProfile(self, clanId):
         return self.wrapAPICall(f'{API_ROOT_PATH}/GroupV2/{clanId}/')
-    
+
 
     def getClanMembers(self, clanId):
         return self.wrapAPICall(f'{API_ROOT_PATH}/GroupV2/{clanId}/Members/')
@@ -74,13 +127,21 @@ class ApiController:
 
     def getItem(self, itemReferenceId):
         pass
-    
 
-    def getCharacterClass(self, membershipType, destinyMembershipId, characterId):
+
+    def getCharacterStats(self, membershipType, destinyMembershipId, characterId):
+        # character:{} 2 keys
+        #     data:{
+        #         classHash
+        #     } 22 keys
+        #     privacy:1 // enum ComponentPrivacySetting "Public"
+
         from app.data.classhash import CLASS_HASH
 
         params = {}
         params['components'] = 200
 
-        classHash = (self.wrapAPICall(f'{API_ROOT_PATH}/Destiny2/{membershipType}/Profile/{destinyMembershipId}/Character/{characterId}', params=params, timeout=(10, 10)))['character']['data']['classHash']
-        return CLASS_HASH[classHash]
+        responseJson = (self.wrapAPICall(f'{API_ROOT_PATH}/Destiny2/{membershipType}/Profile/{destinyMembershipId}/Character/{characterId}', params=params, timeout=(10, 10)))['character']
+        classHash = responseJson['data']['classHash']
+        privacy = responseJson['privacy']
+        return CLASS_HASH[classHash], privacy

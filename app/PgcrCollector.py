@@ -46,7 +46,10 @@ class PGCRCollector:
 
 
     def getCharacters(self):
-        print("> Get Characters")
+        P_NONE = 0
+        P_PUBLIC = 1
+        P_PRIVATE = 2
+        print("> Get Characters for PGCR")
         account_stats = self.api.getAccountStats(self.membershipType, self.membershipId)
         allCharacters = account_stats['characters']
         allCharacters = sorted(allCharacters, key=lambda item: item['characterId'])
@@ -57,10 +60,11 @@ class PGCRCollector:
         for char in allCharacters:
             deleted = char['deleted']
             if deleted:
-                className = None
+                characterClass = None
+                privacy = P_PUBLIC
             else:
-                className = self.api.getCharacterClass(self.membershipType, self.membershipId, char['characterId'])
-            print(f"{char['characterId']}{'' if className == None else ' | ' + className}")
+                characterClass, privacy = self.api.getCharacterStats(self.membershipType, self.membershipId, char['characterId'])
+            print(f"{char['characterId']}{'' if characterClass == None else ' | ' + characterClass}{'' if privacy == P_PUBLIC else ' Activity hidden'}")
         return self
 
 
@@ -123,7 +127,7 @@ class PGCRCollector:
             if pgcr['activityDetails']['referenceId'] not in ONSLAUGHT_ACTIVITIES:
                 pgcr['skip'] = True
 
-            with open("%s/pgcr_%s.json" % (LocalController.GetPGCRDirectoryMember(self.clanName, self.displayName), pgcr["activityDetails"]["instanceId"]), "w", encoding='utf-8') as f:
+            with open("%s/pgcr_%s.json" % (LocalController.GetPGCRDirectoryMember(self.clanName, self.displayName), pgcr["activityDetails"]["instanceId"]), 'w', encoding='utf-8') as f:
                 f.write(json.dumps(pgcr))
 
         if len(self.activities) == 0:

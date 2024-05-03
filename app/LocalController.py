@@ -11,23 +11,23 @@ class LocalController:
 
     @staticmethod
     def GetResultDirectory(clanName):
-        return f"./data/{clanName}/result/"
+        return f'./data/{clanName}/result/'
 
     @staticmethod
     def GetPGCRDirectoryRoot(clanName):
-        return f"./data/{clanName}/pgcr/"
+        return f'./data/{clanName}/pgcr/'
     
     @staticmethod
     def GetPGCRDirectoryMember(clanName, memberName):
-        return f"./data/{clanName}/pgcr/{memberName}/"
+        return f'./data/{clanName}/pgcr/{memberName}/'
 
     @staticmethod
     def GetAllPgcrFilename(clanName):
-        return f"./data/{clanName}/pgcr.json"
+        return f'./data/{clanName}/pgcr.json'
     
     @staticmethod
     def GetCacheRoot():
-        return f"./cache/"
+        return './cache/'
     
     @staticmethod
     def CreateDirectoriesForClan(clanName):
@@ -45,5 +45,6 @@ class LocalController:
     @staticmethod
     def DeleteCacheFolder():
         shutil.rmtree(LocalController.GetCacheRoot(), ignore_errors=True)
+        LocalController.CreateCacheFolder()
 
         

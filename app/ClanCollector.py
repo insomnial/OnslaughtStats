@@ -54,8 +54,12 @@ class ClanCollector:
         # restores a clan object from a cache file
         cacheRoot = LocalController.GetCacheRoot()
         clanFilePath = os.path.join(cacheRoot, str(self.clanId))
-        with open(file=clanFilePath, mode='r', encoding='utf-8') as f:
-            clanCache = json.load(f)
+        try:
+            with open(file=clanFilePath, mode='r', encoding='utf-8') as f:
+                clanCache = json.load(f)
+        except:
+            print(f"> Failed to find clan in cache: {self.clanId}")
+            exit(2)
         self.displayName = clanCache['displayName']
         self.clanMemberCount = clanCache['clanMemberCount']
         self.clanMemberList = clanCache['clanMemberList']
@@ -82,21 +86,25 @@ class ClanCollector:
         return self.clanMemberList
 
 
-    def getCharacters(self):
-        print("> Get Characters")
-        account_stats = self.api.getAccountStats(self.membershipType, self.membershipId)
-        allCharacters = account_stats['characters']
-        self.characters = [c["characterId"] for c in allCharacters]
-        print("> Found characters: ", len(self.characters))
-        for char in allCharacters:
-            deleted = char['deleted']
-            if deleted:
-                className = None
-            else:
-                className = self.api.getCharacterClass(self.membershipType, self.membershipId, char['characterId'])
-            print(f"{char['characterId']}{'' if className == None else ' | ' + className}")
-        return self
-
+    # def getCharacters(self):
+    #     P_NONE = 0
+    #     P_PUBLIC = 1
+    #     P_PRIVATE = 2
+    #     print("> Get Characters for clan")
+    #     account_stats = self.api.getAccountStats(self.membershipType, self.membershipId)
+    #     allCharacters = account_stats['characters']
+    #     self.characters = [c['characterId'] for c in allCharacters]
+    #     print("> Found characters: ", len(self.characters))
+    #     for char in allCharacters:
+    #         deleted = char['deleted']
+    #         if deleted:
+    #             characterClass = None
+    #             privacy = P_NONE
+    #         else:
+    #             characterClass, privacy = self.api.getCharacterStats(self.membershipType, self.membershipId, char['characterId'])
+    #         print(f"{char['characterId']}{'' if characterClass == None else ' | ' + characterClass}{'' if privacy == P_PUBLIC else ' Activity hidden'}")
+    #     return self
+    
 
     def getActivities(self, limit=None):
         print("> Get Activities")
