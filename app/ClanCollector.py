@@ -1,15 +1,15 @@
 import os
 from itertools import zip_longest
 
-from app.Director import Director
-from app.bungieapi import BungieApi
+from app.LocalController import LocalController
+from app.ApiController import ApiController
 import json
 
 from app.internal_timer import Timer
 
 
 class ClanCollector:
-    def __init__(self, clanId, api: BungieApi) -> None:
+    def __init__(self, clanId, api: ApiController) -> None:
         super().__init__()
         self.api = api
         #save these to cache
@@ -44,7 +44,7 @@ class ClanCollector:
         clanCache['displayName'] = self.displayName
         clanCache['clanMemberCount'] = self.clanMemberCount
         clanCache['clanMemberList'] = self.clanMemberList
-        cacheRoot = Director.GetCacheRoot()
+        cacheRoot = LocalController.GetCacheRoot()
         clanFilePath = os.path.join(cacheRoot, str(self.clanId))
         with open(file=clanFilePath, mode='w', encoding='utf-8') as f:
             json.dump(obj=clanCache, fp=f)
@@ -52,10 +52,14 @@ class ClanCollector:
 
     def RestoreClanFromCache(self):
         # restores a clan object from a cache file
-        cacheRoot = Director.GetCacheRoot()
+        cacheRoot = LocalController.GetCacheRoot()
         clanFilePath = os.path.join(cacheRoot, str(self.clanId))
-        with open(file=clanFilePath, mode='r', encoding='utf-8') as f:
-            clanCache = json.load(f)
+        try:
+            with open(file=clanFilePath, mode='r', encoding='utf-8') as f:
+                clanCache = json.load(f)
+        except:
+            print(f"> Failed to find clan in cache: {self.clanId}")
+            exit(2)
         self.displayName = clanCache['displayName']
         self.clanMemberCount = clanCache['clanMemberCount']
         self.clanMemberList = clanCache['clanMemberList']
@@ -82,28 +86,32 @@ class ClanCollector:
         return self.clanMemberList
 
 
-    def getCharacters(self):
-        print("> Get Characters")
-        account_stats = self.api.getAccountStats(self.membershipType, self.membershipId)
-        allCharacters = account_stats['characters']
-        self.characters = [c["characterId"] for c in allCharacters]
-        print("> Found characters: ", len(self.characters))
-        for char in allCharacters:
-            deleted = char['deleted']
-            if deleted:
-                className = None
-            else:
-                className = self.api.getCharacterClass(self.membershipType, self.membershipId, char['characterId'])
-            print(f"{char['characterId']}{'' if className == None else ' | ' + className}")
-        return self
-
+    # def getCharacters(self):
+    #     P_NONE = 0
+    #     P_PUBLIC = 1
+    #     P_PRIVATE = 2
+    #     print("> Get Characters for clan")
+    #     account_stats = self.api.getAccountStats(self.membershipType, self.membershipId)
+    #     allCharacters = account_stats['characters']
+    #     self.characters = [c['characterId'] for c in allCharacters]
+    #     print("> Found characters: ", len(self.characters))
+    #     for char in allCharacters:
+    #         deleted = char['deleted']
+    #         if deleted:
+    #             characterClass = None
+    #             privacy = P_NONE
+    #         else:
+    #             characterClass, privacy = self.api.getCharacterStats(self.membershipType, self.membershipId, char['characterId'])
+    #         print(f"{char['characterId']}{'' if characterClass == None else ' | ' + characterClass}{'' if privacy == P_PUBLIC else ' Activity hidden'}")
+    #     return self
+    
 
     def getActivities(self, limit=None):
         print("> Get Activities")
         assert self.characters is not None
         assert len(self.characters) > 0
 
-        existingPgcrList = [f[5:-5] for f in os.listdir(Director.GetPGCRDirectoryRoot(self.displayName))]
+        existingPgcrList = [f[5:-5] for f in os.listdir(LocalController.GetPGCRDirectoryRoot(self.displayName))]
 
         self.activities = []
         for k, char_id in enumerate(self.characters):
@@ -152,7 +160,7 @@ class ClanCollector:
                 tries += 1
                 pgcr = bungo.getPGCR(id)
 
-            with open("%s/pgcr_%s.json" % (Director.GetPGCRDirectoryRoot(self.displayName), pgcr["activityDetails"]["instanceId"]), "w", encoding='utf-8') as f:
+            with open("%s/pgcr_%s.json" % (LocalController.GetPGCRDirectoryRoot(self.displayName), pgcr["activityDetails"]["instanceId"]), "w", encoding='utf-8') as f:
                 f.write(json.dumps(pgcr))
 
         if len(self.activities) == 0:
@@ -167,7 +175,7 @@ class ClanCollector:
     def combineAllPgcrs(self):
         all = self.getAllPgcrs()
         with Timer("Write all PGCRs to one file"):
-            with open(Director.GetAllPgcrFilename(self.displayName), "w", encoding='utf-8') as f:
+            with open(LocalController.GetAllPgcrFilename(self.displayName), "w", encoding='utf-8') as f:
                 json.dump(all, f, ensure_ascii=False)
         return self
 
@@ -187,7 +195,7 @@ class ClanCollector:
             return r
 
         with Timer("Get all PGCRs from individual files"):
-            root = Director.GetPGCRDirectoryRoot(self.displayName)
+            root = LocalController.GetPGCRDirectoryRoot(self.displayName)
             fileList = ["%s/%s" % (root, f) for f in os.listdir(root)]
             chunks = list(zip_longest(*[iter(fileList)] * 100, fillvalue=None))
             pgcrs = self.processPool.amap(loadJson, chunks).get()

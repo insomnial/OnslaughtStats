@@ -1,8 +1,8 @@
 import os
 from itertools import zip_longest
 
-from app.Director import Director
-from app.bungieapi import BungieApi
+from app.LocalController import LocalController
+from app.ApiController import ApiController
 from app.data.onslaughthash import ONSLAUGHT_ACTIVITIES
 import json
 
@@ -10,7 +10,7 @@ from app.internal_timer import Timer
 
 
 class PGCRCollector:
-    def __init__(self, clanName, memberObj, api: BungieApi, pool) -> None:
+    def __init__(self, clanName, memberObj, api: ApiController, pool) -> None:
         super().__init__()
         self.processPool = pool
         self.membershipType = memberObj['membershipType']
@@ -46,19 +46,25 @@ class PGCRCollector:
 
 
     def getCharacters(self):
-        print("> Get Characters")
+        P_NONE = 0
+        P_PUBLIC = 1
+        P_PRIVATE = 2
+        print("> Get Characters for PGCR")
         account_stats = self.api.getAccountStats(self.membershipType, self.membershipId)
         allCharacters = account_stats['characters']
-        self.characters = [c["characterId"] for c in allCharacters]
+        allCharacters = sorted(allCharacters, key=lambda item: item['characterId'])
+        self.characters = [c['characterId'] for c in allCharacters]
+        (self.characters).sort()
         print("Found characters: ", len(self.characters))
         characters = {}
         for char in allCharacters:
             deleted = char['deleted']
             if deleted:
-                className = None
+                characterClass = None
+                privacy = P_PUBLIC
             else:
-                className = self.api.getCharacterClass(self.membershipType, self.membershipId, char['characterId'])
-            print(f"{char['characterId']}{'' if className == None else ' | ' + className}")
+                characterClass, privacy = self.api.getCharacterStats(self.membershipType, self.membershipId, char['characterId'])
+            print(f"{char['characterId']}{'' if characterClass == None else ' | ' + characterClass}{'' if privacy == P_PUBLIC else ' Activity hidden'}")
         return self
 
 
@@ -68,7 +74,7 @@ class PGCRCollector:
         assert self.displayName is not None
         assert len(self.characters) > 0
 
-        existingPgcrList = [f[5:-5] for f in os.listdir(Director.GetPGCRDirectoryMember(self.clanName, self.displayName))]
+        existingPgcrList = [f[5:-5] for f in os.listdir(LocalController.GetPGCRDirectoryMember(self.clanName, self.displayName))]
 
         self.activities = []
         for k, char_id in enumerate(self.characters):
@@ -121,7 +127,7 @@ class PGCRCollector:
             if pgcr['activityDetails']['referenceId'] not in ONSLAUGHT_ACTIVITIES:
                 pgcr['skip'] = True
 
-            with open("%s/pgcr_%s.json" % (Director.GetPGCRDirectoryMember(self.clanName, self.displayName), pgcr["activityDetails"]["instanceId"]), "w", encoding='utf-8') as f:
+            with open("%s/pgcr_%s.json" % (LocalController.GetPGCRDirectoryMember(self.clanName, self.displayName), pgcr["activityDetails"]["instanceId"]), 'w', encoding='utf-8') as f:
                 f.write(json.dumps(pgcr))
 
         if len(self.activities) == 0:
@@ -137,7 +143,7 @@ class PGCRCollector:
     def combineAllPgcrs(self):
         all = self.getAllPgcrs()
         with Timer("Write all PGCRs to one file"):
-            with open(Director.GetAllPgcrFilename(self.displayName), "w", encoding='utf-8') as f:
+            with open(LocalController.GetAllPgcrFilename(self.displayName), "w", encoding='utf-8') as f:
                 json.dump(all, f, ensure_ascii=False)
         return self
 
@@ -157,7 +163,7 @@ class PGCRCollector:
             return r
 
         with Timer("Get all PGCRs from individual files"):
-            root = Director.GetPGCRDirectoryMember(self.clanName, self.displayName)
+            root = LocalController.GetPGCRDirectoryMember(self.clanName, self.displayName)
             fileList = ["%s/%s" % (root, f) for f in os.listdir(root)]
             chunks = list(zip_longest(*[iter(fileList)] * 100, fillvalue=None))
             pgcrs = self.processPool.amap(loadJson, chunks).get()

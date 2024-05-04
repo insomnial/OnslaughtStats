@@ -1,7 +1,6 @@
-from app.Director import Director
-from app.ManifestController import DestinyManifest
+from app.LocalController import LocalController
 from app.PgcrCollector import PGCRCollector
-from app.bungieapi import BungieApi
+from app.ApiController import ApiController
 from app.ClanCollector import ClanCollector
 from app.data.onslaughthash import ONSLAUGHT_ACTIVITIES
 from app.MemberStats import MemberStats
@@ -48,11 +47,10 @@ if __name__ == '__main__':
         # Manually set API key
         API_KEY = '123456789' 
     
-    Director.CreateCacheFolder()
+    LocalController.CreateCacheFolder()
 
     # check manifest
-    manifest = DestinyManifest().update(freshPull)
-    api = BungieApi(API_KEY)
+    api = ApiController(api_key=API_KEY, freshPull=freshPull)
 
     # create clan holder
     cc = ClanCollector(clan, api)
@@ -60,9 +58,9 @@ if __name__ == '__main__':
     clanName = cc.getDisplayName()
 
     # set up results directories
-    Director.CreateDirectoriesForClan(clanName)
-    Director.ClearResultDirectory(clanName)
-    Director.CreateDirectoriesForClan(clanName)
+    LocalController.CreateDirectoriesForClan(clanName)
+    LocalController.ClearResultDirectory(clanName)
+    LocalController.CreateDirectoriesForClan(clanName)
 
     # populate clan members
     cc.getClanMemberList(freshPull)
@@ -74,19 +72,18 @@ if __name__ == '__main__':
     # pool = ProcessPool(40)
     memberObjects = {}
     # populate PGCRs from clan members
-    for member in tqdm(cc.getClanMembers(), desc="> Fetching clan member PGCRs"):
-        member = member['destinyUserInfo']
-        memberPlatform = member['membershipType']
-        memberUserId = member['membershipId']
-        pc = PGCRCollector(clanName, member, api, pool)
-        memberDisplayName = pc.getProfile().getDisplayName()
-        Director.CreateDirectoriesForMember(clanName, memberDisplayName)
+    if freshPull:
+        for member in tqdm(cc.getClanMembers(), desc="> Fetching clan member PGCRs"):
+            member = member['destinyUserInfo']
+            memberPlatform = member['membershipType']
+            memberUserId = member['membershipId']
+            pc = PGCRCollector(clanName, member, api, pool)
+            memberDisplayName = pc.getProfile().getDisplayName()
+            LocalController.CreateDirectoriesForMember(clanName, memberDisplayName)
 
-        if freshPull:
             pc.getCharacters().getActivities(limit=None).getPGCRs()
-            #data = pc.getAllPgcrs()
             time.sleep(1.0) # I was getting weird 503 errors without this
-    
+        
     if generateReport:
         for member in cc.getClanMembers():
             member = member['destinyUserInfo']
@@ -98,7 +95,7 @@ if __name__ == '__main__':
             mb = None
 
     
-    SimpleTable.generateAttemptsTable(memberObjects)
+    SimpleTable.generateAttemptsTable(clanName, memberObjects)
 
 
     pool.close()
