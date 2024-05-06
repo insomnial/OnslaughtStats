@@ -15,6 +15,8 @@ if __name__ == '__main__':
     import pathos, argparse, os, time
     from tqdm import tqdm
 
+    NULL_CLAN = 'UserInput'
+
     # build argument parsing
     descriptionString = """Get and compile Onslaught stats for a Destiny 2 clan or individual user.
         clan example: main.py -c 174643

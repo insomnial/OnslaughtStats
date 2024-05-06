@@ -7,9 +7,17 @@ from app.MemberStats import MemberStats
 from app.LocalController import LocalController
 import os
 
+def formatTime(aDuration):
+    hours = int(aDuration / 3600)
+    minutes = int((aDuration - hours * 3600) / 60)
+    seconds = int(aDuration - (hours * 3600) - (minutes * 60))
+    return f'{hours:02d}h {minutes:02d}m {seconds:02d}s'
+
+
 class SimpleTable():
     def __init__() -> None:
         pass
+
 
     def generateAttemptsTable(clanName, memberObjects):
         # table column headers
@@ -30,13 +38,20 @@ class SimpleTable():
         COL_HSTE = 'Max Tea'
         COL_TOPL = 'Tot Ply'
         COL_TOTE = 'Tot Tea'
+        COL_TDUR = 'Total Duration'
+        COL_TKIL = 'Total Kills'
+        COL_TDEA = 'Total Deaths'
+        COL_TASS = 'Total Assists'
+
+
         # header row
         outputTable = [[COL_NAME,
                         COL_LPER, COL_LCOM, COL_LATT, 
                         COL_NPER, COL_NCOM, COL_NATT, 
                         COL_PPER, COL_PCOM, COL_PATT, 
                         COL_TPER, COL_TCOM, COL_TATT,
-                        COL_HSPL, COL_HSTE, COL_TOPL, COL_TOTE]]
+                        COL_HSPL, COL_HSTE, COL_TOPL, COL_TOTE,
+                        COL_TDUR, COL_TKIL, COL_TDEA, COL_TASS]]
         # get user data
         for memberKey in memberObjects:
             memberObject = memberObjects[memberKey]
@@ -60,23 +75,27 @@ class SimpleTable():
             highestTeamScore = int(getattr(memberObject, 'highestTeamScore'))
             totalPlayerScore = int(getattr(memberObject, 'totalPlayerScore'))
             totalTeamScore = int(getattr(memberObject, 'totalTeamScore'))
+            totalDuration = int(getattr(memberObject, 'totalDuration'))
+            totalKills = int(getattr(memberObject, 'totalKills'))
+            totalDeaths = int(getattr(memberObject, 'totalDeaths'))
+            totalAssists = int(getattr(memberObject, 'totalAssists'))
 
 
             # build user row
             outputTable.append(
                 [
-                    getattr(memberObject, 'displayName'),
-                    legendPercent, legendTotalCompleted, legendTotalAttempted,
-                    normalPercent, normalTotalCompleted, normalTotalAttempted,
-                    playlistPercent, playlistTotalCompleted, playlistTotalAttemtped,
-                    totalPercent, totalCompleted, totalAttempted,
-                    highestPlayerScore, highestTeamScore, totalPlayerScore, totalTeamScore
+                    getattr(memberObject, 'displayName'),                                   # 0
+                    legendPercent, legendTotalCompleted, legendTotalAttempted,              # 1 2 3
+                    normalPercent, normalTotalCompleted, normalTotalAttempted,              # 4 5 6
+                    playlistPercent, playlistTotalCompleted, playlistTotalAttemtped,        # 7 8 9
+                    totalPercent, totalCompleted, totalAttempted,                           # 10 11 12
+                    highestPlayerScore, highestTeamScore, totalPlayerScore, totalTeamScore, # 13 14 15
+                    formatTime(totalDuration), totalKills, totalDeaths, totalAssists                    # 16 17 18 19
                 ]
             )
 
         tab = PrettyTable(outputTable[0])
         tab.add_rows(outputTable[1:])
-        tab.reversesort = True
         tab.align[COL_NAME] = 'l'
         tab.align[COL_LPER] = 'r'
         tab.align[COL_LATT] = 'r'
@@ -94,6 +113,18 @@ class SimpleTable():
         tab.align[COL_HSTE] = 'r'
         tab.align[COL_TOPL] = 'r'
         tab.align[COL_TOTE] = 'r'
+        tab.align[COL_TDUR] = 'r'
+        tab.align[COL_TKIL] = 'r'
+        tab.align[COL_TDEA] = 'r'
+        tab.align[COL_TASS] = 'r'
+
+        # all completions
+        tab.sortby = COL_NAME
+        tab.reversesort = False
+        reportAllCompletions = tab.get_string(fields=[COL_NAME, COL_LCOM, COL_NCOM, COL_PCOM, COL_TCOM])
+
+        # sort high-to-low (desc)
+        tab.reversesort = True
 
         # legend
         tab.sortby = COL_LCOM
@@ -127,7 +158,7 @@ class SimpleTable():
         tab.sortby = COL_TPER
         reportTotalPercent = tab.get_string(fields=[COL_NAME, COL_TPER])
 
-        #points
+        # points
         tab.sortby = COL_HSPL
         playerMaxPoints = tab.get_string(fields=[COL_NAME, COL_HSPL])
         tab.sortby = COL_HSTE
@@ -136,6 +167,17 @@ class SimpleTable():
         playerTotalPoints = tab.get_string(fields=[COL_NAME, COL_TOPL])
         tab.sortby = COL_TOTE
         teamTotalPoints = tab.get_string(fields=[COL_NAME, COL_TOTE])
+
+        # stats
+        tab.sortby = COL_TDUR
+        # format duration string AFTER sorting?
+        reportTotalDuration = tab.get_string(fields=[COL_NAME, COL_TDUR])
+        tab.sortby = COL_TKIL
+        reportTotalKills = tab.get_string(fields=[COL_NAME, COL_TKIL])
+        tab.sortby = COL_TDEA
+        reportTotalDeaths = tab.get_string(fields=[COL_NAME, COL_TDEA])
+        tab.sortby = COL_TASS
+        reportTotalAssists = tab.get_string(fields=[COL_NAME, COL_TASS])
 
         reports = {
             COL_LCOM: reportLegendCompletions,
@@ -153,7 +195,12 @@ class SimpleTable():
             COL_HSPL: playerMaxPoints,
             COL_HSTE: teamMaxPoints,
             COL_TOPL: playerTotalPoints,
-            COL_TOTE: teamTotalPoints
+            COL_TOTE: teamTotalPoints,
+            COL_TDUR: reportTotalDuration,
+            COL_TKIL: reportTotalKills,
+            COL_TDEA: reportTotalDeaths,
+            COL_TASS: reportTotalAssists,
+            COL_NAME: reportAllCompletions
         }
 
         resultsFolderPath = LocalController.GetResultDirectory(clanName)
@@ -162,4 +209,4 @@ class SimpleTable():
                 f.write(reports[keys])
                 f.write('\n\n')
 
-        print(reportTotalPercent)
+        print(reportAllCompletions)
