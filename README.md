@@ -1,5 +1,5 @@
 # What is this?
-1) Given a clan ID get all members, get all Onslaught PGCRs, and calculate basic stats for the clan as a whole and individual members:
+1) Given a clan ID get all members, get all Onslaught PGCRs, and calculate basic stats for individual members:
    * total runs
    * total legend runs
    * total normal runs
@@ -24,8 +24,9 @@
       CLAN_ID = 881267
    ```
 4) Run the script `python3 main.py`.
-   1) Complete Example: `BUNGIE_API_KEY=123456789012345    python3 main.py -c 174643`
-   2) Alternatively you can also specify just the script: `python3 main.py`
+   1) Complete example for clans: `BUNGIE_API_KEY=123456789012345    python3 main.py -c 174643`
+   2) Complete example for individual user: `BUNGIE_API_KEY=123456789012345    python3 main.py -p 2 -m 4611686018470531562`
+   2) Alternatively you can also specify just the script if you set variables manually: `python3 main.py`
 
 # Where do I get my clan ID?
 1) Go to https://www.bungie.net/7/en (or any other similar page)

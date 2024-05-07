@@ -55,9 +55,13 @@ if __name__ == '__main__':
     api = ApiController(api_key=API_KEY, freshPull=freshPull)
 
     # create clan holder
-    cc = ClanCollector(clan, api)
-    cc.update(freshPull)
-    clanName = cc.getDisplayName()
+    if memberId == None:
+        cc = ClanCollector(clan, api)
+        cc.update(freshPull)
+        clanName = cc.getDisplayName()
+    else:
+        cc = ClanCollector(clanId=0, api=api)
+        clanName = NULL_CLAN
 
     # set up results directories
     LocalController.CreateDirectoriesForClan(clanName)
@@ -65,7 +69,10 @@ if __name__ == '__main__':
     LocalController.CreateDirectoriesForClan(clanName)
 
     # populate clan members
-    cc.getClanMemberList(freshPull)
+    if memberId == None:
+        cc.getClanMemberList(freshPull)
+    else:
+        cc.addMember(platform=platform, membershipId=memberId)
 
     from pathos.multiprocessing import ProcessPool, ThreadPool, ThreadingPool
     pathos.helpers.freeze_support()  # required for windows
@@ -96,8 +103,6 @@ if __name__ == '__main__':
             memberObjects[memberDisplayName] = mb
             mb = None
 
-    
     SimpleTable.generateAttemptsTable(clanName, memberObjects)
-
 
     pool.close()

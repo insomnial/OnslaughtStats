@@ -7,9 +7,18 @@ import requests, os, json
 API_ROOT_PATH = 'https://www.bungie.net/Platform'
 BUNGIE_BASE = 'https://www.bungie.net'
 
+###############################################################################
+# 
+# Everything API related
+# 
+# 
+###############################################################################
 class ApiController:
     __HEADERS: Dict[str, str]
 
+    ###########################################################################
+    # General API functions
+    ###########################################################################
     def __init__(self, api_key: str, freshPull = False):
         self.__HEADERS = {'X-API-Key': api_key}
         self.VersionNumber = self.GetVersionNumber(freshPull)
@@ -88,7 +97,9 @@ class ApiController:
         print(f"API calls failed. Exiting...")
         exit(2)
 
-
+    ###########################################################################
+    # Specific functions
+    ###########################################################################
     def getClanProfile(self, clanId):
         return self.wrapAPICall(f'{API_ROOT_PATH}/GroupV2/{clanId}/')
 
@@ -101,7 +112,7 @@ class ApiController:
         params = {}
         if components is not None: params["components"] = components
 
-        return self.wrapAPICall('{API_ROOT_PATH}/Destiny2/{membershipType}/Profile/{destinyMembershipId}', params=params)
+        return self.wrapAPICall(f'{API_ROOT_PATH}/Destiny2/{membershipType}/Profile/{destinyMembershipId}', params=params)
 
 
     def getAccountStats(self, membershipType, destinyMembershipId):

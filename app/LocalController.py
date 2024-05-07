@@ -46,5 +46,3 @@ class LocalController:
     def DeleteCacheFolder():
         shutil.rmtree(LocalController.GetCacheRoot(), ignore_errors=True)
         LocalController.CreateCacheFolder()
-
-        

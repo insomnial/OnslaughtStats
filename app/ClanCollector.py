@@ -84,26 +84,21 @@ class ClanCollector:
     
     def getClanMembers(self):
         return self.clanMemberList
+    
 
-
-    # def getCharacters(self):
-    #     P_NONE = 0
-    #     P_PUBLIC = 1
-    #     P_PRIVATE = 2
-    #     print("> Get Characters for clan")
-    #     account_stats = self.api.getAccountStats(self.membershipType, self.membershipId)
-    #     allCharacters = account_stats['characters']
-    #     self.characters = [c['characterId'] for c in allCharacters]
-    #     print("> Found characters: ", len(self.characters))
-    #     for char in allCharacters:
-    #         deleted = char['deleted']
-    #         if deleted:
-    #             characterClass = None
-    #             privacy = P_NONE
-    #         else:
-    #             characterClass, privacy = self.api.getCharacterStats(self.membershipType, self.membershipId, char['characterId'])
-    #         print(f"{char['characterId']}{'' if characterClass == None else ' | ' + characterClass}{'' if privacy == P_PUBLIC else ' Activity hidden'}")
-    #     return self
+    def addMember(self, platform, membershipId):
+        profileJson = (self.api.getProfile(membershipType=platform, destinyMembershipId=membershipId))['profile']['data']['userInfo']
+        self.clanMemberList = [{
+            'memberType': platform,
+            'destinyUserInfo': {
+				'membershipType': platform,
+				'membershipId': f'{membershipId}',
+				'displayName': profileJson['displayName'],
+				'bungieGlobalDisplayName': profileJson['bungieGlobalDisplayName'],
+				'bungieGlobalDisplayNameCode': profileJson['bungieGlobalDisplayNameCode']
+            }}]
+        a = True
+        # /Platform/Destiny2/3/Profile/4611686018472661350/?components=100
     
 
     def getActivities(self, limit=None):
