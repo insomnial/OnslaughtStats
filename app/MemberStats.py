@@ -174,4 +174,5 @@ class MemberStats:
                 case _:
                     print(f'Unknown PGCR activity {filepath}')
 
-        return self        
+        return self
+    
