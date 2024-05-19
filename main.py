@@ -47,7 +47,10 @@ if __name__ == '__main__':
         API_KEY = os.getenv('BUNGIE_API_KEY')
     if API_KEY == None:
         # Manually set API key
-        API_KEY = '123456789' 
+        API_KEY = '123456789'
+
+    print(f"API key set to {API_KEY}")
+    print(f"clan: {clan}\nmemberId: {memberId}\nplatform: {platform}\nfreshPull: {freshPull}\ngenerateReport: {generateReport}")
     
     LocalController.CreateCacheFolder()
 

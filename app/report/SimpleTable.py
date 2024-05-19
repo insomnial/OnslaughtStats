@@ -22,22 +22,22 @@ class SimpleTable():
     def generateAttemptsTable(clanName, memberObjects):
         # table column headers
         COL_NAME = 'Name'
-        COL_LPER = 'Leg Comp %'
-        COL_LATT = 'Leg Att'
-        COL_LCOM = 'Leg Comp'
-        COL_NPER = 'Nor Comp %'
-        COL_NATT = 'Nor Att'
-        COL_NCOM = 'Nor Com'
-        COL_PPER = 'Pla Comp %'
-        COL_PATT = 'Pla Att'
-        COL_PCOM = 'Pla Com'
-        COL_TPER = 'Tot Comp %'
-        COL_TATT = 'Tot Att'
-        COL_TCOM = 'Tot Comp'
-        COL_HSPL = 'Max Ply'
-        COL_HSTE = 'Max Tea'
-        COL_TOPL = 'Tot Ply'
-        COL_TOTE = 'Tot Tea'
+        COL_LPER = 'Legend Completion Percent'
+        COL_LATT = 'Legend Attempts'
+        COL_LCOM = 'Legend Completions'
+        COL_NPER = 'Normal Comp %'
+        COL_NATT = 'Normal Attempts'
+        COL_NCOM = 'Normal Completions'
+        COL_PPER = 'Playlist Completion Percent'
+        COL_PATT = 'Playlist Attempts'
+        COL_PCOM = 'Playlist Completions'
+        COL_TPER = 'Total Completion Percent'
+        COL_TATT = 'Total Attempts'
+        COL_TCOM = 'Total Completions'
+        COL_HSPL = 'Maximum Player Score'
+        COL_HSTE = 'Maximum Team Score'
+        COL_TOPL = 'Total Player Score'
+        COL_TOTE = 'Total Team Score'
         COL_TDUR = 'Total Duration'
         COL_TKIL = 'Total Kills'
         COL_TDEA = 'Total Deaths'
@@ -90,7 +90,7 @@ class SimpleTable():
                     playlistPercent, playlistTotalCompleted, playlistTotalAttemtped,        # 7 8 9
                     totalPercent, totalCompleted, totalAttempted,                           # 10 11 12
                     highestPlayerScore, highestTeamScore, totalPlayerScore, totalTeamScore, # 13 14 15
-                    formatTime(totalDuration), totalKills, totalDeaths, totalAssists                    # 16 17 18 19
+                    formatTime(totalDuration), totalKills, totalDeaths, totalAssists        # 16 17 18 19
                 ]
             )
 
@@ -117,6 +117,11 @@ class SimpleTable():
         tab.align[COL_TKIL] = 'r'
         tab.align[COL_TDEA] = 'r'
         tab.align[COL_TASS] = 'r'
+
+        # all stats
+        tab.sortby = COL_NAME
+        tab.reversesort = False
+        reportAllStats = tab.get_string()
 
         # all completions
         tab.sortby = COL_NAME
@@ -200,7 +205,8 @@ class SimpleTable():
             COL_TKIL: reportTotalKills,
             COL_TDEA: reportTotalDeaths,
             COL_TASS: reportTotalAssists,
-            COL_NAME: reportAllCompletions
+            COL_NAME: reportAllCompletions,
+            'AllStats': reportAllStats
         }
 
         resultsFolderPath = LocalController.GetResultDirectory(clanName)
