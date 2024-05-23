@@ -23,7 +23,7 @@ if __name__ == '__main__':
         user example: main.py -p 3 -id 4611686018472661350"""
     parser = argparse.ArgumentParser(prog='main.py', description=f'{descriptionString}', formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--bungie-api-key', '-key', type=str, required=False, help='Your Bungie API key')
-    parser.add_argument('--clan', '-c', type=int, required=False, help='Clan ID as reported on Bungie.net', default='174643')
+    parser.add_argument('--clan', '-c', type=int, required=False, help='Clan ID as reported on Bungie.net')
     parser.add_argument('--member', '-m', type=int, required=False, help='User ID as reported on Bungie.net')
     parser.add_argument('--platform', '-p', type=int, required=False, help='Your platform ID as reported on Bungie.net')
     parser.add_argument('--use-cache', required=False, help='Pull cache data instead of Bungie API', default=False, action='store_true')
@@ -58,21 +58,14 @@ if __name__ == '__main__':
     api = ApiController(api_key=API_KEY, freshPull=freshPull)
 
     # create clan holder
-    if memberId == None:
+    if clan != None:
         cc = ClanCollector(clan, api)
         cc.update(freshPull)
-        clanName = cc.getDisplayName()
     else:
         cc = ClanCollector(clanId=0, api=api)
-        clanName = NULL_CLAN
-
-    # set up results directories
-    LocalController.CreateDirectoriesForClan(clanName)
-    LocalController.ClearResultDirectory(clanName)
-    LocalController.CreateDirectoriesForClan(clanName)
 
     # populate clan members
-    if memberId == None:
+    if clan != None:
         cc.getClanMemberList(freshPull)
     else:
         cc.addMember(platform=platform, membershipId=memberId)
@@ -82,8 +75,10 @@ if __name__ == '__main__':
     pool = ProcessPool()
     # You could also specify the amount of threads. Note that this DRASTICALLY speeds up the process but takes serious computation power.
     # pool = ProcessPool(40)
+
     memberObjects = {}
     # populate PGCRs from clan members
+    clanName = cc.getDisplayName()
     if freshPull:
         for member in tqdm(cc.getClanMembers(), desc="> Fetching clan member PGCRs"):
             member = member['destinyUserInfo']
