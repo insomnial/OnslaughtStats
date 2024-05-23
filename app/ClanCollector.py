@@ -20,6 +20,13 @@ class ClanCollector:
 
         self.members = None
 
+
+    def generateClanFolders(self):
+        # set up results directories
+        LocalController.CreateDirectoriesForClan(self.displayName)
+        LocalController.ClearResultDirectory(self.displayName)
+        LocalController.CreateDirectoriesForClan(self.displayName)
+
     
     def update(self, freshPull):
         if freshPull:
@@ -34,8 +41,9 @@ class ClanCollector:
             print(f"> Get clan profile from cache")
             self.RestoreClanFromCache()
             print(f"Restored clan from cache")
+        self.generateClanFolders()
         return self
-
+    
 
     def SaveClanToCache(self):
         # saves the clan id, name, and member list to a cache file
@@ -97,9 +105,10 @@ class ClanCollector:
 				'bungieGlobalDisplayName': profileJson['bungieGlobalDisplayName'],
 				'bungieGlobalDisplayNameCode': profileJson['bungieGlobalDisplayNameCode']
             }}]
-        a = True
-        # /Platform/Destiny2/3/Profile/4611686018472661350/?components=100
-    
+        # adding just one member means this is a single user pull, change clan name to reflect that and reset destination folder
+        self.displayName = f'{profileJson['bungieGlobalDisplayName']}[{profileJson['bungieGlobalDisplayNameCode']}]'
+        self.generateClanFolders()
+
 
     def getActivities(self, limit=None):
         print("> Get Activities")
