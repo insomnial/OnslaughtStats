@@ -37,4 +37,4 @@ ONSLAUGHT_ACTIVITIES = {
     1618784039: 'Widow\'s Court: Onslaught: Salvation',
     1543235317: 'Expert: Widow\'s Court: Onslaught: Salvation'
 
-    }
+}

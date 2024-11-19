@@ -22,6 +22,13 @@
    ```py
       # Manually set clan ID here
       CLAN_ID = 881267
+
+      # Manually set clan ID
+      CLAN_ID = 881267
+
+      # Manually set user ID
+      PLATFORM_ID = 3
+      MEMBER_ID = 4611686018472661350
    ```
 4) Run the script `python3 main.py`.
    1) Complete example for clans: `BUNGIE_API_KEY=123456789012345    python3 main.py -c 174643`

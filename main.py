@@ -37,11 +37,11 @@ if __name__ == '__main__':
     generateReport = not args['no_report']
 
     # Manually set clan ID
-    # CLAN_ID = 881267
+    CLAN_ID = 881267
 
     # Manually set user ID
-    # PLATFORM_ID = 3
-    # MEMBER_ID = 4611686018472661350
+    PLATFORM_ID = 3
+    MEMBER_ID = 4611686018472661350
 
     if API_KEY == None:
         API_KEY = os.getenv('BUNGIE_API_KEY')
